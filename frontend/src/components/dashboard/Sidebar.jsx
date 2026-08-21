@@ -1,28 +1,37 @@
-import { NavLink } from "react-router-dom";
 import {
-  BarChart3,
+  LayoutDashboard,
   Car,
-  ChevronLeft,
-  ChevronRight,
-  Droplets,
-  Flag,
-  Home,
-  Leaf,
-  LogOut,
-  Menu,
+  Zap,
+  Utensils,
   Recycle,
+  Droplets,
+  Target,
   Sparkles,
   Trophy,
-  Utensils,
   User,
+  LogOut,
+  Leaf,
   X,
-  Zap,
 } from "lucide-react";
 
-import { useState } from "react";
+import { NavLink, useNavigate } from "react-router-dom";
 
-export default function Sidebar() {
-  const [collapsed, setCollapsed] = useState(false);
+export default function Sidebar({ mobileOpen, setMobileOpen }) {
+
+  const navigate = useNavigate();
+
+  const closeMobile = () => {
+    if (setMobileOpen) {
+      setMobileOpen(false);
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+
+    navigate("/login");
+  };
 
   const menu = [
     {
@@ -31,152 +40,187 @@ export default function Sidebar() {
         {
           name: "Dashboard",
           path: "/dashboard",
-          icon: <Home size={19} />,
+          icon: <LayoutDashboard size={17} />,
         },
       ],
     },
+
     {
-      title: "Track Emissions",
+      title: "Track",
       items: [
         {
           name: "Transportation",
           path: "/tracking/transportation",
-          icon: <Car size={19} />,
+          icon: <Car size={17} />,
         },
         {
           name: "Electricity",
           path: "/tracking/electricity",
-          icon: <Zap size={19} />,
+          icon: <Zap size={17} />,
         },
         {
           name: "Food",
           path: "/tracking/food",
-          icon: <Utensils size={19} />,
+          icon: <Utensils size={17} />,
         },
         {
           name: "Waste",
           path: "/tracking/waste",
-          icon: <Recycle size={19} />,
+          icon: <Recycle size={17} />,
         },
         {
           name: "Water",
           path: "/tracking/water",
-          icon: <Droplets size={19} />,
+          icon: <Droplets size={17} />,
         },
       ],
     },
+
     {
       title: "Improve",
       items: [
         {
           name: "Goals",
           path: "/goals",
-          icon: <Flag size={19} />,
+          icon: <Target size={17} />,
         },
         {
           name: "AI Advisor",
           path: "/advisor",
-          icon: <Sparkles size={19} />,
+          icon: <Sparkles size={17} />,
         },
         {
           name: "Leaderboard",
           path: "/leaderboard",
-          icon: <Trophy size={19} />,
-        },
-      ],
-    },
-    {
-      title: "Account",
-      items: [
-        {
-          name: "Profile",
-          path: "/profile",
-          icon: <User size={19} />,
+          icon: <Trophy size={17} />,
         },
       ],
     },
   ];
 
   return (
-    <aside className={collapsed ? "sidebar collapsed" : "sidebar"}>
+    <>
+      {mobileOpen && (
+        <div
+          className="sidebar-overlay"
+          onClick={closeMobile}
+        />
+      )}
 
-      <div className="sidebar-logo">
-        <div className="sidebar-logo-icon">
-          <Leaf size={20} />
-        </div>
+      <aside
+        className={`dashboard-sidebar ${
+          mobileOpen ? "sidebar-mobile-open" : ""
+        }`}
+      >
 
-        {!collapsed && (
-          <span>
-            Eco<span>Track</span>
-          </span>
-        )}
-      </div>
+        {/* LOGO */}
 
-      <div className="sidebar-menu">
+        <div className="sidebar-header">
 
-        {menu.map((section) => (
-          <div
-            className="sidebar-section"
-            key={section.title}
+          <NavLink
+            to="/dashboard"
+            className="sidebar-logo"
+            onClick={closeMobile}
           >
 
-            {!collapsed && (
-              <div className="sidebar-section-title">
+            <div className="sidebar-logo-icon">
+              <Leaf size={19} />
+            </div>
+
+            <div>
+              <strong>
+                EcoTrack
+              </strong>
+
+              <span>
+                Sustainability
+              </span>
+            </div>
+
+          </NavLink>
+
+          <button
+            className="sidebar-close"
+            onClick={closeMobile}
+          >
+            <X size={19} />
+          </button>
+
+        </div>
+
+        {/* NAVIGATION */}
+
+        <div className="sidebar-navigation">
+
+          {menu.map((section) => (
+
+            <div
+              className="sidebar-section"
+              key={section.title}
+            >
+
+              <span className="sidebar-section-title">
                 {section.title}
-              </div>
-            )}
+              </span>
 
-            {section.items.map((item) => (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                className={({ isActive }) =>
-                  isActive
-                    ? "sidebar-link active"
-                    : "sidebar-link"
-                }
-                title={collapsed ? item.name : ""}
-              >
-                {item.icon}
+              {section.items.map((item) => (
 
-                {!collapsed && (
-                  <span>{item.name}</span>
-                )}
-              </NavLink>
-            ))}
+                <NavLink
+                  key={item.path}
+                  to={item.path}
+                  onClick={closeMobile}
+                  className={({ isActive }) =>
+                    `sidebar-link ${
+                      isActive
+                        ? "sidebar-link-active"
+                        : ""
+                    }`
+                  }
+                >
+                  {item.icon}
+                  <span>
+                    {item.name}
+                  </span>
+                </NavLink>
 
-          </div>
-        ))}
+              ))}
 
-      </div>
+            </div>
 
-      <div className="sidebar-bottom">
+          ))}
 
-        <button
-          className="sidebar-collapse"
-          onClick={() => setCollapsed(!collapsed)}
-        >
-          {collapsed ? (
-            <ChevronRight size={18} />
-          ) : (
-            <ChevronLeft size={18} />
-          )}
+        </div>
 
-          {!collapsed && (
-            <span>Collapse</span>
-          )}
-        </button>
+        {/* BOTTOM */}
 
-        <button className="sidebar-logout">
-          <LogOut size={18} />
+        <div className="sidebar-bottom">
 
-          {!collapsed && (
-            <span>Logout</span>
-          )}
-        </button>
+          <NavLink
+            to="/profile"
+            onClick={closeMobile}
+            className={({ isActive }) =>
+              `sidebar-link ${
+                isActive
+                  ? "sidebar-link-active"
+                  : ""
+              }`
+            }
+          >
+            <User size={17} />
+            Profile
+          </NavLink>
 
-      </div>
+          <button
+            className="sidebar-logout"
+            onClick={handleLogout}
+          >
+            <LogOut size={17} />
+            Logout
+          </button>
 
-    </aside>
+        </div>
+
+      </aside>
+    </>
   );
 }

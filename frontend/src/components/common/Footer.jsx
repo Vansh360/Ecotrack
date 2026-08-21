@@ -1,93 +1,151 @@
+import {
+  Leaf,
+  Github,
+  Linkedin,
+  Mail,
+  ArrowUp,
+} from "lucide-react";
 import { Link } from "react-router-dom";
-import { Leaf, Mail } from "lucide-react";
 
 export default function Footer() {
+  const scrollTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
+
   return (
-    <footer className="footer">
+    <footer className="main-footer">
 
       <div className="footer-container">
 
+        {/* BRAND */}
+
         <div className="footer-brand">
 
-          <Link to="/" className="logo footer-logo">
+          <Link to="/" className="footer-logo">
 
-            <span className="logo-icon">
-              <Leaf size={20} />
-            </span>
+            <div className="footer-logo-icon">
+              <Leaf size={19} />
+            </div>
 
-            <span className="logo-text">
-              Eco<span>Track</span>
-            </span>
+            <strong>
+              EcoTrack
+            </strong>
 
           </Link>
 
           <p>
-            Track your carbon footprint, understand your impact,
-            and build a more sustainable future.
+            An AI-powered platform that helps
+            individuals understand, track and
+            reduce their carbon footprint.
           </p>
 
-          <div className="footer-email">
-            <Mail size={16} />
-            <span>contact@ecotrack.com</span>
+          <div className="footer-socials">
+
+            <a
+              href="https://github.com/Vansh360/Ecotrack"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="GitHub"
+            >
+              <Github size={15} />
+            </a>
+
+            <a
+              href="#"
+              aria-label="LinkedIn"
+            >
+              <Linkedin size={15} />
+            </a>
+
+            <a
+              href="mailto:contact@ecotrack.com"
+              aria-label="Email"
+            >
+              <Mail size={15} />
+            </a>
+
           </div>
 
         </div>
 
+        {/* PRODUCT */}
+
         <div className="footer-column">
 
-          <h4>Platform</h4>
+          <h3>
+            Product
+          </h3>
 
-          <a href="#features">
-            Features
-          </a>
+          <Link to="/dashboard">
+            Dashboard
+          </Link>
 
-          <a href="#how-it-works">
-            How It Works
-          </a>
+          <Link to="/goals">
+            Goals
+          </Link>
 
-          <Link to="/register">
-            Get Started
+          <Link to="/advisor">
+            AI Advisor
+          </Link>
+
+          <Link to="/leaderboard">
+            Leaderboard
           </Link>
 
         </div>
 
+        {/* TRACKING */}
+
         <div className="footer-column">
 
-          <h4>Track</h4>
+          <h3>
+            Tracking
+          </h3>
 
-          <a href="#features">
+          <Link to="/tracking/transportation">
             Transportation
-          </a>
+          </Link>
 
-          <a href="#features">
+          <Link to="/tracking/electricity">
             Electricity
-          </a>
+          </Link>
 
-          <a href="#features">
+          <Link to="/tracking/food">
             Food
-          </a>
+          </Link>
 
-          <a href="#features">
+          <Link to="/tracking/waste">
             Waste
-          </a>
+          </Link>
+
+          <Link to="/tracking/water">
+            Water
+          </Link>
 
         </div>
 
+        {/* ACCOUNT */}
+
         <div className="footer-column">
 
-          <h4>Company</h4>
+          <h3>
+            Account
+          </h3>
 
-          <a href="#about">
-            About
-          </a>
+          <Link to="/login">
+            Login
+          </Link>
 
-          <a href="#about">
-            Our Mission
-          </a>
+          <Link to="/register">
+            Register
+          </Link>
 
-          <a href="#about">
-            Contact
-          </a>
+          <Link to="/profile">
+            Profile
+          </Link>
 
         </div>
 
@@ -96,12 +154,17 @@ export default function Footer() {
       <div className="footer-bottom">
 
         <span>
-          © {new Date().getFullYear()} EcoTrack
+          © {new Date().getFullYear()} EcoTrack.
+          All rights reserved.
         </span>
 
-        <span>
-          AI-Powered Sustainability Platform
-        </span>
+        <button
+          className="footer-top-button"
+          onClick={scrollTop}
+        >
+          Back to top
+          <ArrowUp size={13} />
+        </button>
 
       </div>
 

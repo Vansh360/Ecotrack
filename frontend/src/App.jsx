@@ -18,6 +18,8 @@ import Advisor from "./pages/Advisor/Advisor";
 import Leaderboard from "./pages/Leaderboard/Leaderboard";
 import Profile from "./pages/Profile/Profile";
 
+import ProtectedRoute from "./components/auth/ProtectedRoute";
+
 function App() {
   return (
     <Routes>
@@ -28,52 +30,59 @@ function App() {
 
       <Route path="/register" element={<Register />} />
 
-      <Route path="/dashboard" element={<Dashboard />} />
+      <Route element={<ProtectedRoute />}>
 
-      <Route
-        path="/tracking/transportation"
-        element={<Transportation />}
-      />
+        <Route
+          path="/dashboard"
+          element={<Dashboard />}
+        />
 
-      <Route
-        path="/tracking/electricity"
-        element={<Electricity />}
-      />
+        <Route
+          path="/tracking/transportation"
+          element={<Transportation />}
+        />
 
-      <Route
-        path="/tracking/food"
-        element={<Food />}
-      />
+        <Route
+          path="/tracking/electricity"
+          element={<Electricity />}
+        />
 
-      <Route
-        path="/tracking/waste"
-        element={<Waste />}
-      />
+        <Route
+          path="/tracking/food"
+          element={<Food />}
+        />
 
-      <Route
-        path="/tracking/water"
-        element={<Water />}
-      />
+        <Route
+          path="/tracking/waste"
+          element={<Waste />}
+        />
 
-      <Route
-        path="/goals"
-        element={<Goals />}
-      />
+        <Route
+          path="/tracking/water"
+          element={<Water />}
+        />
 
-      <Route
-        path="/advisor"
-        element={<Advisor />}
-      />
+        <Route
+          path="/goals"
+          element={<Goals />}
+        />
 
-      <Route
-        path="/leaderboard"
-        element={<Leaderboard />}
-      />
+        <Route
+          path="/advisor"
+          element={<Advisor />}
+        />
 
-      <Route
-        path="/profile"
-        element={<Profile />}
-      />
+        <Route
+          path="/leaderboard"
+          element={<Leaderboard />}
+        />
+
+        <Route
+          path="/profile"
+          element={<Profile />}
+        />
+
+      </Route>
 
     </Routes>
   );

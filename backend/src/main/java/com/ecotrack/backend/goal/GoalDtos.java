@@ -1,0 +1,2 @@
+package com.ecotrack.backend.goal; import jakarta.validation.constraints.*; import java.time.LocalDate;
+public final class GoalDtos{public record CreateGoalRequest(@NotBlank String title,Double targetReductionPercent,Double targetEmission,@NotNull LocalDate startDate,@NotNull LocalDate endDate){} public record GoalResponse(Long id,String title,Double targetReductionPercent,Double targetEmission,Double baselineEmission,Double currentEmission,double progress,String status,LocalDate startDate,LocalDate endDate){}}

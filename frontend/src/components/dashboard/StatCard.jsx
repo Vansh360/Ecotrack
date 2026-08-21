@@ -1,13 +1,13 @@
 export default function StatCard({
+  icon,
   title,
   value,
   unit,
-  change,
-  icon,
-  positive = true,
+  description,
+  trend,
 }) {
   return (
-    <div className="dashboard-stat-card">
+    <div className="stat-card">
 
       <div className="stat-card-top">
 
@@ -15,31 +15,29 @@ export default function StatCard({
           {icon}
         </div>
 
-        <span
-          className={
-            positive
-              ? "stat-change positive"
-              : "stat-change negative"
-          }
-        >
-          {positive ? "↓" : "↑"} {change}
-        </span>
-
-      </div>
-
-      <div className="stat-card-title">
-        {title}
-      </div>
-
-      <div className="stat-card-value">
-
-        {value}
-
-        {unit && (
-          <span>{unit}</span>
+        {trend && (
+          <span className="stat-trend">
+            {trend}
+          </span>
         )}
 
       </div>
+
+      <span className="stat-card-title">
+        {title}
+      </span>
+
+      <div className="stat-card-value">
+        {value}
+
+        {unit && (
+          <small>{unit}</small>
+        )}
+      </div>
+
+      {description && (
+        <p>{description}</p>
+      )}
 
     </div>
   );

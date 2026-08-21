@@ -1,0 +1,3 @@
+package com.ecotrack.backend.goal; import jakarta.validation.Valid; import org.springframework.security.core.context.SecurityContextHolder; import org.springframework.web.bind.annotation.*; import java.util.*;
+@RestController @RequestMapping("/api/goals") public class GoalController{private final GoalService s;public GoalController(GoalService s){this.s=s;}private String email(){return SecurityContextHolder.getContext().getAuthentication().getName();}@PostMapping public GoalDtos.GoalResponse create(@Valid @RequestBody GoalDtos.CreateGoalRequest r){return s.create(email(),r);}@GetMapping public List<GoalDtos.GoalResponse> list(){return s.list(email());}@GetMapping("/{id}") public GoalDtos.GoalResponse get(@PathVariable Long id){return s.get(email(),id);}}
+    

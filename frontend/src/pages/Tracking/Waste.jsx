@@ -7,7 +7,7 @@ import {
   GlassWater,
 } from "lucide-react";
 
-export default function Water() {
+export default function Waste() {
   const [dailyUsage, setDailyUsage] = useState("");
   const [result, setResult] = useState(null);
 

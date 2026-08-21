@@ -1,0 +1,1 @@
+package com.ecotrack.backend.goal; import org.springframework.data.jpa.repository.JpaRepository; import java.util.*; public interface GoalRepository extends JpaRepository<Goal,Long>{List<Goal> findByUserIdOrderByEndDateAsc(Long userId);}

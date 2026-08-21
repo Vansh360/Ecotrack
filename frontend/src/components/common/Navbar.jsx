@@ -1,79 +1,172 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { Leaf, Menu, X } from "lucide-react";
+import {
+  Leaf,
+  Menu,
+  X,
+  LayoutDashboard,
+  LogIn,
+  UserPlus,
+  Target,
+  Sparkles,
+  Trophy,
+} from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function Navbar() {
-  const [open, setOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const navigate = useNavigate();
 
   const closeMenu = () => {
-    setOpen(false);
+    setMenuOpen(false);
   };
 
   return (
-    <header className="navbar">
-      <div className="navbar-container">
+    <nav className="main-navbar">
 
-        <Link to="/" className="logo" onClick={closeMenu}>
-          <span className="logo-icon">
-            <Leaf size={21} />
-          </span>
+      {/* LOGO */}
 
-          <span className="logo-text">
-            Eco<span>Track</span>
-          </span>
+      <Link
+        to="/"
+        className="navbar-logo"
+        onClick={closeMenu}
+      >
+        <div className="navbar-logo-icon">
+          <Leaf size={20} />
+        </div>
+
+        <div>
+          <strong>EcoTrack</strong>
+          <span>Track. Reduce. Sustain.</span>
+        </div>
+      </Link>
+
+      {/* DESKTOP NAVIGATION */}
+
+      <div className="navbar-links">
+
+        <Link to="/">
+          Home
         </Link>
 
-        <nav className={open ? "nav-links nav-open" : "nav-links"}>
+        <Link to="/dashboard">
+          <LayoutDashboard size={15} />
+          Dashboard
+        </Link>
 
-          <a href="#home" onClick={closeMenu}>
+        <Link to="/goals">
+          <Target size={15} />
+          Goals
+        </Link>
+
+        <Link to="/advisor">
+          <Sparkles size={15} />
+          AI Advisor
+        </Link>
+
+        <Link to="/leaderboard">
+          <Trophy size={15} />
+          Leaderboard
+        </Link>
+
+      </div>
+
+      {/* DESKTOP AUTH */}
+
+      <div className="navbar-actions">
+
+        <button
+          className="navbar-login"
+          onClick={() => navigate("/login")}
+        >
+          <LogIn size={15} />
+          Login
+        </button>
+
+        <button
+          className="navbar-register"
+          onClick={() => navigate("/register")}
+        >
+          <UserPlus size={15} />
+          Get Started
+        </button>
+
+      </div>
+
+      {/* MOBILE BUTTON */}
+
+      <button
+        className="navbar-menu-button"
+        onClick={() => setMenuOpen(!menuOpen)}
+      >
+        {menuOpen ? (
+          <X size={22} />
+        ) : (
+          <Menu size={22} />
+        )}
+      </button>
+
+      {/* MOBILE MENU */}
+
+      {menuOpen && (
+        <div className="mobile-navbar-menu">
+
+          <Link to="/" onClick={closeMenu}>
             Home
-          </a>
+          </Link>
 
-          <a href="#how-it-works" onClick={closeMenu}>
-            How It Works
-          </a>
+          <Link
+            to="/dashboard"
+            onClick={closeMenu}
+          >
+            <LayoutDashboard size={15} />
+            Dashboard
+          </Link>
 
-          <a href="#features" onClick={closeMenu}>
-            Features
-          </a>
+          <Link
+            to="/goals"
+            onClick={closeMenu}
+          >
+            <Target size={15} />
+            Goals
+          </Link>
 
-          <a href="#about" onClick={closeMenu}>
-            About
-          </a>
+          <Link
+            to="/advisor"
+            onClick={closeMenu}
+          >
+            <Sparkles size={15} />
+            AI Advisor
+          </Link>
 
-          <div className="mobile-nav-buttons">
-            <Link to="/login" onClick={closeMenu}>
-              Login
-            </Link>
+          <Link
+            to="/leaderboard"
+            onClick={closeMenu}
+          >
+            <Trophy size={15} />
+            Leaderboard
+          </Link>
 
-            <Link to="/register" onClick={closeMenu}>
-              Get Started
-            </Link>
-          </div>
+          <div className="mobile-navbar-divider" />
 
-        </nav>
-
-        <div className="desktop-nav-buttons">
-
-          <Link to="/login" className="login-button">
+          <Link
+            to="/login"
+            onClick={closeMenu}
+          >
             Login
           </Link>
 
-          <Link to="/register" className="get-started-button">
+          <Link
+            to="/register"
+            onClick={closeMenu}
+            className="mobile-register"
+          >
             Get Started
           </Link>
 
         </div>
+      )}
 
-        <button
-          className="menu-button"
-          onClick={() => setOpen(!open)}
-          aria-label="Open menu"
-        >
-          {open ? <X size={25} /> : <Menu size={25} />}
-        </button>
-
-      </div>
-    </header>
+    </nav>
   );
 }

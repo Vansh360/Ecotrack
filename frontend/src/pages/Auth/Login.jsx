@@ -25,6 +25,8 @@ export default function Login() {
       password,
     });
 
+    localStorage.setItem("token", "development-token");
+
     // Backend will be connected later.
     navigate("/dashboard");
   };

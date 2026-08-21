@@ -3,6 +3,7 @@ export default function EmissionCard({
   title,
   value,
   percentage,
+  description,
 }) {
   return (
     <div className="emission-card">
@@ -13,26 +14,24 @@ export default function EmissionCard({
           {icon}
         </div>
 
-        <div>
-          <h4>{title}</h4>
-          <span>Monthly emissions</span>
+        <div className="emission-card-info">
+          <strong>{title}</strong>
+
+          <span>{description}</span>
         </div>
 
-      </div>
+        <strong className="emission-value">
+          {value} kg
+        </strong>
 
-      <div className="emission-value">
-        {value}
-        <small>kg CO₂e</small>
       </div>
 
       <div className="emission-progress">
-
         <div
           style={{
             width: `${percentage}%`,
           }}
-        ></div>
-
+        />
       </div>
 
       <div className="emission-percentage">

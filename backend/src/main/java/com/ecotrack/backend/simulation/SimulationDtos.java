@@ -1,0 +1,2 @@
+package com.ecotrack.backend.simulation; import jakarta.validation.constraints.*;
+public final class SimulationDtos{public record Request(@NotBlank String category,@NotBlank String currentType,@Positive double currentQuantity,@NotBlank String unit,@NotBlank String alternativeType,@Positive double alternativeQuantity){} public record Response(double currentEmission,double alternativeEmission,double potentialSaving,double savingPercentage,String message){}}

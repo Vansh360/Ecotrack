@@ -1,120 +1,281 @@
+import { useState } from "react";
 import {
   Sparkles,
+  Send,
   Leaf,
   Car,
   Zap,
   Utensils,
   Recycle,
   Droplets,
-  ArrowRight,
-  CheckCircle,
   TrendingDown,
+  Lightbulb,
+  Target,
+  RefreshCw,
 } from "lucide-react";
 
 export default function Advisor() {
-  const recommendations = [
+  const [question, setQuestion] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const [recommendations, setRecommendations] = useState([
     {
-      icon: <Car size={21} />,
+      id: 1,
+      icon: <Car size={18} />,
       category: "Transportation",
-      title: "Use public transport twice a week",
+      title: "Reduce car usage",
       description:
-        "Transportation is currently your largest emission source. Replacing two car trips every week could significantly reduce your footprint.",
-      saving: "28 kg CO₂/month",
-      impact: "High Impact",
+        "Transportation is currently your largest emission source. Consider using public transport or carpooling twice a week.",
+      saving: "Potential saving: 28 kg CO₂/month",
+      priority: "High Impact",
     },
     {
-      icon: <Zap size={21} />,
+      id: 2,
+      icon: <Zap size={18} />,
       category: "Electricity",
-      title: "Reduce unnecessary electricity usage",
+      title: "Reduce electricity consumption",
       description:
-        "Turn off unused appliances and consider energy-efficient lighting to reduce your monthly electricity consumption.",
-      saving: "12 kg CO₂/month",
-      impact: "Medium Impact",
+        "Switch off unused appliances and consider using energy-efficient lighting and appliances.",
+      saving: "Potential saving: 12 kg CO₂/month",
+      priority: "Medium Impact",
     },
     {
-      icon: <Utensils size={21} />,
+      id: 3,
+      icon: <Utensils size={18} />,
       category: "Food",
-      title: "Choose more plant-based meals",
+      title: "Choose lower-carbon meals",
       description:
-        "Replacing a few high-emission meals with plant-based alternatives can reduce your food-related carbon footprint.",
-      saving: "10 kg CO₂/month",
-      impact: "Medium Impact",
+        "Replacing some high-emission meals with plant-based alternatives can reduce your food footprint.",
+      saving: "Potential saving: 10 kg CO₂/month",
+      priority: "Medium Impact",
     },
-    {
-      icon: <Recycle size={21} />,
-      category: "Waste",
-      title: "Increase household recycling",
-      description:
-        "Separating recyclable materials from general waste can lower waste-related emissions.",
-      saving: "6 kg CO₂/month",
-      impact: "Low Impact",
-    },
-  ];
+  ]);
+
+  const handleAskAI = async (e) => {
+    e.preventDefault();
+
+    if (!question.trim()) {
+      return;
+    }
+
+    setLoading(true);
+
+    /*
+      Temporary frontend response.
+
+      Later this will become:
+
+      POST /api/advisor/ask
+
+      and Spring Boot will communicate
+      with Gemini/OpenAI.
+    */
+
+    setTimeout(() => {
+      setRecommendations((previous) => [
+        {
+          id: Date.now(),
+          icon: <Sparkles size={18} />,
+          category: "AI Recommendation",
+          title: "Personalized recommendation",
+          description:
+            "Based on your current activities, reducing unnecessary transportation and electricity consumption would have the greatest impact.",
+          saving: "Estimated reduction: 20–30 kg CO₂/month",
+          priority: "AI Generated",
+        },
+        ...previous,
+      ]);
+
+      setQuestion("");
+      setLoading(false);
+    }, 1200);
+  };
+
+  const refreshRecommendations = () => {
+    setLoading(true);
+
+    setTimeout(() => {
+      setLoading(false);
+    }, 800);
+  };
 
   return (
     <div className="advisor-page">
 
       {/* HEADER */}
 
-      <div className="advisor-hero">
+      <div className="advisor-header">
 
-        <div className="advisor-sparkle">
-          <Sparkles size={27} />
+        <div className="advisor-title-section">
+
+          <div className="advisor-icon">
+            <Sparkles size={25} />
+          </div>
+
+          <div>
+            <span className="advisor-label">
+              AI-POWERED
+            </span>
+
+            <h1>
+              Sustainability Advisor
+            </h1>
+
+            <p>
+              Get personalized recommendations to
+              reduce your environmental impact.
+            </p>
+          </div>
+
         </div>
 
-        <div>
-          <span>AI POWERED</span>
+        <button
+          className="advisor-refresh"
+          onClick={refreshRecommendations}
+          disabled={loading}
+        >
+          <RefreshCw
+            size={14}
+            className={loading ? "spin" : ""}
+          />
 
-          <h1>
-            Sustainability Advisor
-          </h1>
-
-          <p>
-            Personalized recommendations to help
-            you reduce your environmental impact.
-          </p>
-        </div>
+          Refresh Advice
+        </button>
 
       </div>
 
       {/* AI SUMMARY */}
 
-      <div className="advisor-summary">
+      <div className="ai-summary">
 
-        <div className="advisor-summary-icon">
-          <Sparkles size={24} />
+        <div className="ai-summary-icon">
+          <Sparkles size={22} />
         </div>
 
-        <div className="advisor-summary-content">
+        <div className="ai-summary-content">
 
           <span>
-            AI ANALYSIS
+            YOUR AI INSIGHT
           </span>
 
           <h2>
-            Your biggest opportunity is transportation.
+            Transportation is your biggest
+            opportunity for improvement.
           </h2>
 
           <p>
-            Based on your recent activity, transportation
-            contributes approximately 43% of your monthly
-            carbon footprint. Small changes to your travel
-            habits could make a significant difference.
+            Your current transportation emissions
+            account for approximately 43% of your
+            total monthly footprint. Small changes
+            in your travel habits could make a
+            significant difference.
           </p>
 
         </div>
 
-        <div className="advisor-potential">
-
-          <TrendingDown size={18} />
-
-          <span>
-            Potential monthly reduction
-          </span>
+        <div className="ai-summary-stat">
 
           <strong>
-            56 kg CO₂
+            28 kg
           </strong>
+
+          <span>
+            potential CO₂
+            reduction/month
+          </span>
+
+        </div>
+
+      </div>
+
+      {/* ASK AI */}
+
+      <div className="ask-ai-card">
+
+        <div className="ask-ai-heading">
+
+          <div className="ask-ai-icon">
+            <Lightbulb size={18} />
+          </div>
+
+          <div>
+            <h2>
+              Ask EcoTrack AI
+            </h2>
+
+            <p>
+              Ask questions about your carbon footprint
+              and sustainability.
+            </p>
+          </div>
+
+        </div>
+
+        <form
+          className="ai-question-form"
+          onSubmit={handleAskAI}
+        >
+
+          <input
+            type="text"
+            placeholder="Example: How can I reduce my carbon footprint?"
+            value={question}
+            onChange={(e) =>
+              setQuestion(e.target.value)
+            }
+          />
+
+          <button
+            type="submit"
+            disabled={loading}
+          >
+            {loading ? (
+              "Thinking..."
+            ) : (
+              <>
+                Ask AI
+                <Send size={14} />
+              </>
+            )}
+          </button>
+
+        </form>
+
+        <div className="suggested-questions">
+
+          <span>
+            Try asking:
+          </span>
+
+          <button
+            onClick={() =>
+              setQuestion(
+                "How can I reduce my transportation emissions?"
+              )
+            }
+          >
+            Reduce transportation
+          </button>
+
+          <button
+            onClick={() =>
+              setQuestion(
+                "How can I reduce my electricity emissions?"
+              )
+            }
+          >
+            Save electricity
+          </button>
+
+          <button
+            onClick={() =>
+              setQuestion(
+                "What food choices have lower carbon emissions?"
+              )
+            }
+          >
+            Sustainable food
+          </button>
 
         </div>
 
@@ -122,119 +283,184 @@ export default function Advisor() {
 
       {/* RECOMMENDATIONS */}
 
-      <div className="advisor-section-header">
+      <div className="recommendations-section">
 
-        <div>
-          <h2>
-            Personalized Recommendations
-          </h2>
+        <div className="section-heading">
 
-          <p>
-            Actions prioritized according to their
-            potential environmental impact.
-          </p>
-        </div>
-
-      </div>
-
-      <div className="recommendations-grid">
-
-        {recommendations.map((item, index) => (
-
-          <div
-            className="recommendation-card"
-            key={index}
-          >
-
-            <div className="recommendation-top">
-
-              <div className="recommendation-icon">
-                {item.icon}
-              </div>
-
-              <span className="impact-badge">
-                {item.impact}
-              </span>
-
-            </div>
-
-            <span className="recommendation-category">
-              {item.category}
+          <div>
+            <span>
+              PERSONALIZED
             </span>
 
-            <h3>
-              {item.title}
-            </h3>
+            <h2>
+              Recommendations
+            </h2>
 
             <p>
-              {item.description}
+              Suggestions based on your activity
+              and carbon footprint.
             </p>
+          </div>
 
-            <div className="recommendation-saving">
+          <div className="recommendation-count">
+            {recommendations.length} suggestions
+          </div>
 
-              <TrendingDown size={15} />
+        </div>
 
-              <strong>
-                Potential saving
-              </strong>
+        <div className="recommendation-grid">
 
-              <span>
-                {item.saving}
+          {recommendations.map((recommendation) => (
+
+            <div
+              className="recommendation-card"
+              key={recommendation.id}
+            >
+
+              <div className="recommendation-top">
+
+                <div className="recommendation-icon">
+                  {recommendation.icon}
+                </div>
+
+                <span className="recommendation-priority">
+                  {recommendation.priority}
+                </span>
+
+              </div>
+
+              <span className="recommendation-category">
+                {recommendation.category}
               </span>
+
+              <h3>
+                {recommendation.title}
+              </h3>
+
+              <p>
+                {recommendation.description}
+              </p>
+
+              <div className="recommendation-saving">
+
+                <TrendingDown size={15} />
+
+                {recommendation.saving}
+
+              </div>
+
+              <button className="recommendation-action">
+                Add to Goals
+                <Target size={14} />
+              </button>
 
             </div>
 
-            <button className="recommendation-button">
-              Start This Action
-              <ArrowRight size={14} />
-            </button>
+          ))}
 
-          </div>
-
-        ))}
+        </div>
 
       </div>
 
-      {/* HOW AI WORKS */}
+      {/* CATEGORY INSIGHTS */}
 
-      <div className="ai-how-section">
+      <div className="category-insights">
 
-        <div className="ai-how-icon">
-          <Leaf size={24} />
-        </div>
+        <div className="category-insight-card">
 
-        <div>
+          <Car size={20} />
 
-          <h2>
-            How EcoTrack AI works
-          </h2>
+          <div>
+            <strong>
+              Transportation
+            </strong>
 
-          <p>
-            Your recommendations will be generated by
-            analyzing your transportation, electricity,
-            food, waste and water consumption patterns.
-          </p>
+            <span>
+              Highest impact area
+            </span>
+          </div>
 
-        </div>
-
-        <div className="ai-process">
-
-          <span>
-            <CheckCircle size={14} />
-            Analyze
-          </span>
-
-          <span>
-            <CheckCircle size={14} />
-            Identify
-          </span>
-
-          <span>
-            <CheckCircle size={14} />
-            Recommend
-          </span>
+          <b>
+            180 kg
+          </b>
 
         </div>
+
+        <div className="category-insight-card">
+
+          <Zap size={20} />
+
+          <div>
+            <strong>
+              Electricity
+            </strong>
+
+            <span>
+              Second highest
+            </span>
+          </div>
+
+          <b>
+            120 kg
+          </b>
+
+        </div>
+
+        <div className="category-insight-card">
+
+          <Utensils size={20} />
+
+          <div>
+            <strong>
+              Food
+            </strong>
+
+            <span>
+              Moderate impact
+            </span>
+          </div>
+
+          <b>
+            80 kg
+          </b>
+
+        </div>
+
+        <div className="category-insight-card">
+
+          <Recycle size={20} />
+
+          <div>
+            <strong>
+              Waste
+            </strong>
+
+            <span>
+              Lowest impact
+            </span>
+          </div>
+
+          <b>
+            40 kg
+          </b>
+
+        </div>
+
+      </div>
+
+      {/* FOOTNOTE */}
+
+      <div className="advisor-disclaimer">
+
+        <Leaf size={16} />
+
+        <p>
+          EcoTrack recommendations are generated
+          from your recorded activities and
+          sustainability preferences. Estimated
+          emission reductions are approximate and
+          may vary depending on individual behavior.
+        </p>
 
       </div>
 

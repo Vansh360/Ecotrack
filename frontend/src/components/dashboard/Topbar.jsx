@@ -1,58 +1,72 @@
 import {
+  Menu,
   Bell,
-  ChevronDown,
-  Leaf,
-  Search,
+  Plus,
+  User,
 } from "lucide-react";
 
 import { Link } from "react-router-dom";
 
-export default function Topbar() {
+export default function Topbar({ onMenuClick }) {
   return (
     <header className="dashboard-topbar">
 
-      <div className="mobile-logo">
-        <Leaf size={20} />
-        <span>
-          Eco<span>Track</span>
-        </span>
-      </div>
+      <div className="topbar-left">
 
-      <div className="dashboard-search">
+        <button
+          className="topbar-menu"
+          onClick={onMenuClick}
+        >
+          <Menu size={20} />
+        </button>
 
-        <Search size={17} />
+        <div>
+          <span className="topbar-label">
+            ECOTRACK
+          </span>
 
-        <input
-          type="text"
-          placeholder="Search..."
-        />
+          <h2>
+            Sustainability Dashboard
+          </h2>
+        </div>
 
       </div>
 
       <div className="topbar-actions">
 
-        <button className="notification-button">
-          <Bell size={19} />
+        <button className="topbar-add">
 
-          <span className="notification-dot"></span>
+          <Plus size={15} />
+
+          <span>
+            Add Activity
+          </span>
+
+        </button>
+
+        <button className="topbar-notification">
+          <Bell size={17} />
+
+          <span className="notification-dot" />
         </button>
 
         <Link
           to="/profile"
-          className="profile-mini"
+          className="topbar-profile"
         >
-
-          <div className="profile-avatar">
-            V
+          <div className="topbar-avatar">
+            <User size={16} />
           </div>
 
-          <div className="profile-info">
-            <strong>Vansh</strong>
-            <span>Eco User</span>
+          <div>
+            <strong>
+              Vansh
+            </strong>
+
+            <span>
+              Eco User
+            </span>
           </div>
-
-          <ChevronDown size={15} />
-
         </Link>
 
       </div>

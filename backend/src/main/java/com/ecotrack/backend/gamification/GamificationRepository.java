@@ -1,0 +1,1 @@
+package com.ecotrack.backend.gamification; import org.springframework.data.jpa.repository.JpaRepository; import java.util.*; public interface GamificationRepository extends JpaRepository<Badge,Long>{}
