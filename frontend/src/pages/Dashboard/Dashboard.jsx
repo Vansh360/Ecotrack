@@ -1,21 +1,48 @@
 import {
+  Activity,
+  Leaf,
+  TrendingDown,
+  Target,
   BarChart3,
   Car,
-  Droplets,
-  Leaf,
-  Recycle,
-  Target,
-  TrendingDown,
-  Utensils,
   Zap,
+  Utensils,
+  Recycle,
+  Droplets,
+  X,
 } from "lucide-react";
+
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import Sidebar from "../../components/dashboard/Sidebar";
 import Topbar from "../../components/dashboard/Topbar";
 import StatCard from "../../components/dashboard/StatCard";
 import EmissionCard from "../../components/dashboard/EmissionCard";
+import { useActivities } from "../../context/ActivityContext";
 
 export default function Dashboard() {
+  const navigate = useNavigate();
+  const [showActivityModal, setShowActivityModal] = useState(false);
+  const {
+    activities,
+    totalEmission,
+    getCategoryEmission,
+  } = useActivities();
+
+  const categoryEmissions = [
+    { name: "Transportation", value: getCategoryEmission("Transportation") },
+    { name: "Electricity", value: getCategoryEmission("Electricity") },
+    { name: "Food", value: getCategoryEmission("Food") },
+    { name: "Waste", value: getCategoryEmission("Waste") },
+    { name: "Water", value: getCategoryEmission("Water") },
+  ];
+
+  const transportationEmission = categoryEmissions[0].value;
+  const electricityEmission = categoryEmissions[1].value;
+  const foodEmission = categoryEmissions[2].value;
+  const wasteEmission = categoryEmissions[3].value;
+
   return (
     <div className="dashboard-layout">
 
@@ -23,7 +50,7 @@ export default function Dashboard() {
 
       <div className="dashboard-main">
 
-        <Topbar />
+        <Topbar onAddActivity={() => setShowActivityModal(true)} />
 
         <main className="dashboard-content">
 
@@ -46,8 +73,12 @@ export default function Dashboard() {
               </p>
             </div>
 
-            <button className="add-activity-button">
-              + Add Activity
+            <button
+              className="add-activity-button"
+              onClick={() => setShowActivityModal(true)}
+            >
+              <span>+</span>
+              Add Activity
             </button>
 
           </div>
@@ -58,7 +89,7 @@ export default function Dashboard() {
 
             <StatCard
               title="Carbon Footprint"
-              value="420.8"
+              value={totalEmission.toFixed(1)}
               unit="kg"
               change="8.4%"
               positive
@@ -108,7 +139,7 @@ export default function Dashboard() {
                   <h3>Carbon Emissions</h3>
 
                   <p>
-                    Your emissions over the last 6 months
+                    Your current emissions by category
                   </p>
                 </div>
 
@@ -121,49 +152,21 @@ export default function Dashboard() {
 
               <div className="chart-area">
 
-                <div className="chart-y-labels">
-                  <span>600</span>
-                  <span>450</span>
-                  <span>300</span>
-                  <span>150</span>
-                  <span>0</span>
-                </div>
-
-                <div className="fake-dashboard-chart">
-
-                  <div className="chart-grid-line"></div>
-                  <div className="chart-grid-line"></div>
-                  <div className="chart-grid-line"></div>
-                  <div className="chart-grid-line"></div>
-
-                  <svg
-                    viewBox="0 0 600 200"
-                    preserveAspectRatio="none"
-                  >
-                    <polyline
-                      points="0,55 100,72 200,60 300,95 400,78 500,110 600,125"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    />
-
-                    <circle
-                      cx="600"
-                      cy="125"
-                      r="6"
-                      fill="currentColor"
-                    />
-                  </svg>
-
-                  <div className="chart-months">
-                    <span>Mar</span>
-                    <span>Apr</span>
-                    <span>May</span>
-                    <span>Jun</span>
-                    <span>Jul</span>
-                    <span>Aug</span>
-                  </div>
-
+                <div className="category-chart">
+                  {categoryEmissions.map((category) => (
+                    <div className="category-chart-row" key={category.name}>
+                      <span>{category.name}</span>
+                      <div className="category-chart-track">
+                        <div
+                          className="category-chart-bar"
+                          style={{
+                            width: `${totalEmission ? Math.max((category.value / totalEmission) * 100, category.value ? 4 : 0) : 0}%`,
+                          }}
+                        />
+                      </div>
+                      <strong>{category.value.toFixed(1)} kg</strong>
+                    </div>
+                  ))}
                 </div>
 
               </div>
@@ -227,33 +230,66 @@ export default function Dashboard() {
 
             <EmissionCard
               title="Transportation"
-              value="180"
-              percentage={43}
+              value={transportationEmission.toFixed(1)}
+              percentage={totalEmission ? Math.round((transportationEmission / totalEmission) * 100) : 0}
               icon={<Car size={20} />}
             />
 
             <EmissionCard
               title="Electricity"
-              value="120"
-              percentage={29}
+              value={electricityEmission.toFixed(1)}
+              percentage={totalEmission ? Math.round((electricityEmission / totalEmission) * 100) : 0}
               icon={<Zap size={20} />}
             />
 
             <EmissionCard
               title="Food"
-              value="80"
-              percentage={19}
+              value={foodEmission.toFixed(1)}
+              percentage={totalEmission ? Math.round((foodEmission / totalEmission) * 100) : 0}
               icon={<Utensils size={20} />}
             />
 
             <EmissionCard
               title="Waste"
-              value="40"
-              percentage={9}
+              value={wasteEmission.toFixed(1)}
+              percentage={totalEmission ? Math.round((wasteEmission / totalEmission) * 100) : 0}
               icon={<Recycle size={20} />}
             />
 
           </div>
+
+          <section className="dashboard-panel recent-activities">
+            <div className="panel-header">
+              <div>
+                <h2>Recent Activities</h2>
+                <p>Your latest carbon footprint records</p>
+              </div>
+            </div>
+
+            {activities.length === 0 ? (
+              <div className="empty-activities">
+                <Leaf size={25} />
+                <strong>No activities yet</strong>
+                <p>Click &quot;Add Activity&quot; to start tracking your carbon footprint.</p>
+              </div>
+            ) : (
+              <div className="activity-history-list">
+                {activities.slice(0, 5).map((activity) => (
+                  <div className="activity-history-item" key={activity.id}>
+                    <div>
+                      <strong>{activity.category}</strong>
+                      <span>
+                        {activity.details || activity.activityType} &bull; {activity.quantity} {activity.unit}
+                      </span>
+                    </div>
+                    <strong className="activity-emission">
+                      {Number(activity.emission).toFixed(2)} kg
+                    </strong>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
 
           {/* BOTTOM */}
 
@@ -344,6 +380,128 @@ export default function Dashboard() {
           </div>
 
         </main>
+
+        {showActivityModal && (
+          <div
+            className="activity-modal-overlay"
+            onClick={() => setShowActivityModal(false)}
+          >
+            <div
+              className="activity-modal"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="activity-modal-header">
+                <div>
+                  <span className="modal-label">ECOTRACK</span>
+                  <h2>Add Activity</h2>
+                  <p>Select what you want to track today.</p>
+                </div>
+
+                <button
+                  className="modal-close"
+                  onClick={() => setShowActivityModal(false)}
+                  aria-label="Close activity modal"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div className="activity-options">
+                <button
+                  className="activity-option"
+                  onClick={() => {
+                    setShowActivityModal(false);
+                    navigate("/tracking/transportation");
+                  }}
+                >
+                  <div className="activity-option-icon transportation-icon">
+                    <Car size={22} />
+                  </div>
+                  <div>
+                    <strong>Transportation</strong>
+                    <span>Car, bike, bus, train or flight</span>
+                  </div>
+                  <span className="activity-arrow">→</span>
+                </button>
+
+                <button
+                  className="activity-option"
+                  onClick={() => {
+                    setShowActivityModal(false);
+                    navigate("/tracking/electricity");
+                  }}
+                >
+                  <div className="activity-option-icon electricity-icon">
+                    <Zap size={22} />
+                  </div>
+                  <div>
+                    <strong>Electricity</strong>
+                    <span>Track your electricity consumption</span>
+                  </div>
+                  <span className="activity-arrow">→</span>
+                </button>
+
+                <button
+                  className="activity-option"
+                  onClick={() => {
+                    setShowActivityModal(false);
+                    navigate("/tracking/food");
+                  }}
+                >
+                  <div className="activity-option-icon food-icon">
+                    <Utensils size={22} />
+                  </div>
+                  <div>
+                    <strong>Food</strong>
+                    <span>Track your food consumption</span>
+                  </div>
+                  <span className="activity-arrow">→</span>
+                </button>
+
+                <button
+                  className="activity-option"
+                  onClick={() => {
+                    setShowActivityModal(false);
+                    navigate("/tracking/waste");
+                  }}
+                >
+                  <div className="activity-option-icon waste-icon">
+                    <Recycle size={22} />
+                  </div>
+                  <div>
+                    <strong>Waste</strong>
+                    <span>Plastic, paper and food waste</span>
+                  </div>
+                  <span className="activity-arrow">→</span>
+                </button>
+
+                <button
+                  className="activity-option"
+                  onClick={() => {
+                    setShowActivityModal(false);
+                    navigate("/tracking/water");
+                  }}
+                >
+                  <div className="activity-option-icon water-icon">
+                    <Droplets size={22} />
+                  </div>
+                  <div>
+                    <strong>Water</strong>
+                    <span>Track your daily water usage</span>
+                  </div>
+                  <span className="activity-arrow">→</span>
+                </button>
+              </div>
+
+              <button
+                className="activity-cancel"
+                onClick={() => setShowActivityModal(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
 
       </div>
 

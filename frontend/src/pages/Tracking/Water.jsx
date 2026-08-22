@@ -1,222 +1,152 @@
 import { useState } from "react";
 import {
   Droplets,
-  Leaf,
-  ShowerHead,
-  Waves,
-  GlassWater,
+  Calculator,
+  CheckCircle,
 } from "lucide-react";
 
+import { useActivities } from "../../context/ActivityContext";
+
 export default function Water() {
-  const [dailyUsage, setDailyUsage] = useState("");
-  const [result, setResult] = useState(null);
+  const { addActivity } = useActivities();
 
-  const calculateWater = (e) => {
-    e.preventDefault();
+  const [usage, setUsage] = useState("");
+  const [emission, setEmission] = useState(null);
+  const [saved, setSaved] = useState(false);
 
-    const daily = Number(dailyUsage);
+  /*
+    Temporary illustrative factor.
+    Later this will be configurable from the backend.
+  */
+  const WATER_FACTOR = 0.0003;
 
-    if (!daily || daily <= 0) {
-      alert("Please enter a valid daily water usage.");
+  const calculateEmission = () => {
+    const litres = Number(usage);
+
+    if (!litres || litres <= 0) {
+      alert("Please enter a valid water usage.");
       return;
     }
 
-    const monthly = daily * 30;
+    const result = litres * WATER_FACTOR;
 
-    let score;
+    setEmission(Number(result.toFixed(3)));
+    setSaved(false);
+  };
 
-    if (daily <= 100) {
-      score = 95;
-    } else if (daily <= 150) {
-      score = 85;
-    } else if (daily <= 200) {
-      score = 70;
-    } else if (daily <= 250) {
-      score = 55;
-    } else {
-      score = 40;
+  const saveActivity = () => {
+    if (emission === null) {
+      alert("Please calculate the emission first.");
+      return;
     }
 
-    setResult({
-      monthly,
-      score,
+    addActivity({
+      category: "Water",
+      activityType: "Water Consumption",
+      quantity: Number(usage),
+      unit: "litres",
+      emission,
+      details: `${usage} litres water`,
     });
+
+    setSaved(true);
   };
 
   return (
     <div className="tracking-page">
 
-      {/* Header */}
-
       <div className="tracking-header">
 
         <div className="tracking-icon">
-          <Droplets size={24} />
+          <Droplets size={25} />
         </div>
 
         <div>
-          <span>TRACK CONSUMPTION</span>
+          <span>TRACK</span>
 
-          <h1>Water Consumption</h1>
+          <h1>
+            Water Consumption
+          </h1>
 
           <p>
-            Track your water usage and improve
-            your water conservation habits.
+            Track your daily water consumption.
           </p>
         </div>
 
       </div>
 
-      {/* Main Card */}
-
       <div className="tracking-card">
 
-        <form onSubmit={calculateWater}>
+        <div className="form-group">
 
-          <div className="form-group">
+          <label>
+            Daily Water Usage
+          </label>
 
-            <label>
-              Daily Water Consumption
-            </label>
+          <input
+            type="number"
+            min="0"
+            placeholder="Enter water usage in litres"
+            value={usage}
+            onChange={(e) => {
+              setUsage(e.target.value);
+              setEmission(null);
+              setSaved(false);
+            }}
+          />
 
-            <div className="water-input-wrapper">
+          <small>
+            Example: 150 litres
+          </small>
 
-              <Droplets size={18} />
+        </div>
 
-              <input
-                type="number"
-                min="0"
-                step="1"
-                placeholder="Enter litres per day"
-                value={dailyUsage}
-                onChange={(e) =>
-                  setDailyUsage(e.target.value)
-                }
-              />
+        <button
+          className="calculate-button"
+          onClick={calculateEmission}
+        >
+          <Calculator
+            size={14}
+            style={{
+              marginRight: 6,
+              verticalAlign: "middle",
+            }}
+          />
 
-              <span>
-                Litres/day
-              </span>
+          Calculate CO₂
+        </button>
 
-            </div>
+        {emission !== null && (
+          <div className="calculation-result">
+
+            <span>
+              Estimated Carbon Emission
+            </span>
+
+            <strong>
+              {emission} kg CO₂
+            </strong>
 
             <small>
-              Enter your approximate daily water usage.
+              Based on {usage} litres of water consumption
             </small>
 
           </div>
-
-          <button
-            type="submit"
-            className="calculate-button"
-          >
-            Calculate Usage
-          </button>
-
-        </form>
-
-        {result && (
-
-          <div className="water-result-grid">
-
-            <div className="water-result-card">
-
-              <Droplets size={25} />
-
-              <span>
-                Monthly Usage
-              </span>
-
-              <strong>
-                {result.monthly.toLocaleString()} L
-              </strong>
-
-            </div>
-
-            <div className="water-result-card">
-
-              <Leaf size={25} />
-
-              <span>
-                Conservation Score
-              </span>
-
-              <strong>
-                {result.score}/100
-              </strong>
-
-            </div>
-
-          </div>
-
         )}
 
-      </div>
+        {emission !== null && (
+          <button
+            className="save-activity-button"
+            onClick={saveActivity}
+            disabled={saved}
+          >
+            <CheckCircle size={15} />
 
-      {/* Tips */}
-
-      <div className="water-tips">
-
-        <h2>
-          Water Conservation Tips
-        </h2>
-
-        <p>
-          Small changes in daily habits can save
-          thousands of litres every month.
-        </p>
-
-        <div className="water-tips-grid">
-
-          <div className="water-tip-card">
-
-            <div className="water-tip-icon">
-              <ShowerHead size={20} />
-            </div>
-
-            <h3>
-              Shorter Showers
-            </h3>
-
-            <p>
-              Reduce shower time to conserve water.
-            </p>
-
-          </div>
-
-          <div className="water-tip-card">
-
-            <div className="water-tip-icon">
-              <GlassWater size={20} />
-            </div>
-
-            <h3>
-              Avoid Wastage
-            </h3>
-
-            <p>
-              Turn off taps when water is not needed.
-            </p>
-
-          </div>
-
-          <div className="water-tip-card">
-
-            <div className="water-tip-icon">
-              <Waves size={20} />
-            </div>
-
-            <h3>
-              Reuse Water
-            </h3>
-
-            <p>
-              Reuse suitable water for plants and cleaning.
-            </p>
-
-          </div>
-
-        </div>
+            {saved
+              ? "Activity Saved"
+              : "Save Activity"}
+          </button>
+        )}
 
       </div>
 

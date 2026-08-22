@@ -1,58 +1,80 @@
 import { useState } from "react";
-import { Car, Leaf } from "lucide-react";
+import {
+  Car,
+  Calculator,
+  CheckCircle,
+} from "lucide-react";
+
+import { useActivities } from "../../context/ActivityContext";
 
 export default function Transportation() {
+  const { addActivity } = useActivities();
 
-  const [form, setForm] = useState({
-    vehicle: "Car",
-    fuel: "Petrol",
-    distance: "",
-  });
+  const [vehicle, setVehicle] = useState("Car");
+  const [fuel, setFuel] = useState("Petrol");
+  const [distance, setDistance] = useState("");
 
-  const [result, setResult] = useState(null);
+  const [emission, setEmission] = useState(null);
+  const [saved, setSaved] = useState(false);
 
-  const emissionFactors = {
-    Car: {
-      Petrol: 0.192,
-      Diesel: 0.171,
-      Electric: 0.053,
-    },
+  const calculateEmission = () => {
+    const km = Number(distance);
 
-    Bike: {
-      Petrol: 0.103,
-      Diesel: 0.09,
-      Electric: 0.03,
-    },
-
-    Bus: {
-      Diesel: 0.105,
-      Petrol: 0.105,
-      Electric: 0.04,
-    },
-
-    Train: {
-      Electric: 0.041,
-      Diesel: 0.06,
-      Petrol: 0.06,
-    },
-  };
-
-  const calculate = (e) => {
-    e.preventDefault();
-
-    const distance = Number(form.distance);
-
-    if (!distance) {
-      alert("Please enter distance.");
+    if (!km || km <= 0) {
+      alert("Please enter a valid distance.");
       return;
     }
 
-    const factor =
-      emissionFactors[form.vehicle][form.fuel];
+    let factor = 0.192;
 
-    const emission = distance * factor;
+    if (vehicle === "Bike") {
+      factor = 0.103;
+    }
 
-    setResult(emission.toFixed(2));
+    if (vehicle === "Bus") {
+      factor = 0.089;
+    }
+
+    if (vehicle === "Train") {
+      factor = 0.041;
+    }
+
+    if (vehicle === "Flight") {
+      factor = 0.255;
+    }
+
+    if (
+      vehicle === "Car" &&
+      fuel === "Diesel"
+    ) {
+      factor = 0.171;
+    }
+
+    const result = km * factor;
+
+    setEmission(Number(result.toFixed(2)));
+    setSaved(false);
+  };
+
+  const saveActivity = () => {
+    if (emission === null) {
+      alert("Please calculate the emission first.");
+      return;
+    }
+
+    addActivity({
+      category: "Transportation",
+      activityType: vehicle,
+      quantity: Number(distance),
+      unit: "km",
+      emission: emission,
+      details:
+        vehicle === "Car"
+          ? `${fuel} car`
+          : vehicle,
+    });
+
+    setSaved(true);
   };
 
   return (
@@ -61,11 +83,13 @@ export default function Transportation() {
       <div className="tracking-header">
 
         <div className="tracking-icon">
-          <Car size={24} />
+          <Car size={25} />
         </div>
 
         <div>
-          <span>TRACK EMISSIONS</span>
+          <span>
+            TRACK
+          </span>
 
           <h1>
             Transportation
@@ -80,108 +104,137 @@ export default function Transportation() {
 
       <div className="tracking-card">
 
-        <form onSubmit={calculate}>
+        <div className="form-group">
+          <label>
+            Vehicle Type
+          </label>
 
-          <div className="tracking-form-grid">
-
-            <div className="form-group">
-
-              <label>
-                Vehicle Type
-              </label>
-
-              <select
-                value={form.vehicle}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    vehicle: e.target.value,
-                  })
-                }
-              >
-                <option>Car</option>
-                <option>Bike</option>
-                <option>Bus</option>
-                <option>Train</option>
-              </select>
-
-            </div>
-
-            <div className="form-group">
-
-              <label>
-                Fuel Type
-              </label>
-
-              <select
-                value={form.fuel}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    fuel: e.target.value,
-                  })
-                }
-              >
-                <option>Petrol</option>
-                <option>Diesel</option>
-                <option>Electric</option>
-              </select>
-
-            </div>
-
-            <div className="form-group">
-
-              <label>
-                Distance
-              </label>
-
-              <input
-                type="number"
-                min="0"
-                placeholder="e.g. 15"
-                value={form.distance}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    distance: e.target.value,
-                  })
-                }
-              />
-
-            </div>
-
-          </div>
-
-          <button
-            className="calculate-button"
-            type="submit"
+          <select
+            value={vehicle}
+            onChange={(e) => {
+              setVehicle(e.target.value);
+              setEmission(null);
+              setSaved(false);
+            }}
           >
-            Calculate CO₂
-          </button>
+            <option value="Car">
+              Car
+            </option>
 
-        </form>
+            <option value="Bike">
+              Bike
+            </option>
 
-        {result && (
+            <option value="Bus">
+              Bus
+            </option>
 
+            <option value="Train">
+              Train
+            </option>
+
+            <option value="Flight">
+              Flight
+            </option>
+          </select>
+        </div>
+
+        {vehicle === "Car" && (
+          <div
+            className="form-group"
+            style={{ marginTop: 15 }}
+          >
+            <label>
+              Fuel Type
+            </label>
+
+            <select
+              value={fuel}
+              onChange={(e) =>
+                setFuel(e.target.value)
+              }
+            >
+              <option value="Petrol">
+                Petrol
+              </option>
+
+              <option value="Diesel">
+                Diesel
+              </option>
+            </select>
+          </div>
+        )}
+
+        <div
+          className="form-group"
+          style={{ marginTop: 15 }}
+        >
+          <label>
+            Distance Travelled
+          </label>
+
+          <input
+            type="number"
+            min="0"
+            placeholder="Enter distance in km"
+            value={distance}
+            onChange={(e) => {
+              setDistance(e.target.value);
+              setEmission(null);
+              setSaved(false);
+            }}
+          />
+
+          <small>
+            Example: 15 km
+          </small>
+        </div>
+
+        <button
+          className="calculate-button"
+          onClick={calculateEmission}
+        >
+          <Calculator
+            size={14}
+            style={{
+              marginRight: 6,
+              verticalAlign: "middle",
+            }}
+          />
+
+          Calculate CO₂
+        </button>
+
+        {emission !== null && (
           <div className="calculation-result">
 
-            <Leaf size={30} />
-
             <span>
-              Estimated Emission
+              Estimated Carbon Emission
             </span>
 
             <strong>
-              {result} kg CO₂e
+              {emission} kg CO₂
             </strong>
 
             <small>
-              Based on your entered distance and
-              selected transportation mode.
+              Based on {distance} km of {vehicle.toLowerCase()} travel
             </small>
 
           </div>
+        )}
 
+        {emission !== null && (
+          <button
+            className="save-activity-button"
+            onClick={saveActivity}
+            disabled={saved}
+          >
+            <CheckCircle size={15} />
+
+            {saved
+              ? "Activity Saved"
+              : "Save Activity"}
+          </button>
         )}
 
       </div>

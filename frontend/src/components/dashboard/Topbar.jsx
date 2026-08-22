@@ -7,7 +7,7 @@ import {
 
 import { Link } from "react-router-dom";
 
-export default function Topbar({ onMenuClick }) {
+export default function Topbar({ onMenuClick, onAddActivity }) {
   return (
     <header className="dashboard-topbar">
 
@@ -34,7 +34,7 @@ export default function Topbar({ onMenuClick }) {
 
       <div className="topbar-actions">
 
-        <button className="topbar-add">
+        <button className="topbar-add" onClick={onAddActivity}>
 
           <Plus size={15} />
 

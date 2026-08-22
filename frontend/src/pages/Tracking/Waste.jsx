@@ -1,226 +1,204 @@
 import { useState } from "react";
 import {
-  Droplets,
-  Leaf,
-  ShowerHead,
-  Waves,
-  GlassWater,
+  Recycle,
+  Calculator,
+  CheckCircle,
 } from "lucide-react";
 
+import { useActivities } from "../../context/ActivityContext";
+
 export default function Waste() {
-  const [dailyUsage, setDailyUsage] = useState("");
-  const [result, setResult] = useState(null);
+  const { addActivity } = useActivities();
 
-  const calculateWater = (e) => {
-    e.preventDefault();
+  const [wasteType, setWasteType] = useState("Plastic");
+  const [quantity, setQuantity] = useState("");
 
-    const daily = Number(dailyUsage);
+  const [emission, setEmission] = useState(null);
+  const [saved, setSaved] = useState(false);
 
-    if (!daily || daily <= 0) {
-      alert("Please enter a valid daily water usage.");
+  /*
+    Temporary frontend factors.
+    These will later be moved to the backend.
+  */
+  const emissionFactors = {
+    Plastic: 2.5,
+    Paper: 1.3,
+    "Food Waste": 0.8,
+    "General Waste": 1.5,
+    Recycling: 0.4,
+  };
+
+  const calculateEmission = () => {
+    const kg = Number(quantity);
+
+    if (!kg || kg <= 0) {
+      alert("Please enter a valid waste quantity.");
       return;
     }
 
-    const monthly = daily * 30;
+    const factor = emissionFactors[wasteType];
 
-    let score;
+    const result = kg * factor;
 
-    if (daily <= 100) {
-      score = 95;
-    } else if (daily <= 150) {
-      score = 85;
-    } else if (daily <= 200) {
-      score = 70;
-    } else if (daily <= 250) {
-      score = 55;
-    } else {
-      score = 40;
+    setEmission(Number(result.toFixed(2)));
+    setSaved(false);
+  };
+
+  const saveActivity = () => {
+    if (emission === null) {
+      alert("Please calculate the emission first.");
+      return;
     }
 
-    setResult({
-      monthly,
-      score,
+    addActivity({
+      category: "Waste",
+      activityType: wasteType,
+      quantity: Number(quantity),
+      unit: "kg",
+      emission,
+      details: `${wasteType} waste`,
     });
+
+    setSaved(true);
   };
 
   return (
     <div className="tracking-page">
 
-      {/* HEADER */}
-
       <div className="tracking-header">
 
         <div className="tracking-icon">
-          <Droplets size={24} />
+          <Recycle size={25} />
         </div>
 
         <div>
-          <span>TRACK CONSUMPTION</span>
+          <span>TRACK</span>
 
-          <h1>Water Consumption</h1>
+          <h1>
+            Waste Management
+          </h1>
 
           <p>
-            Track your water usage and improve
-            your water conservation habits.
+            Track waste generation and recycling activities.
           </p>
         </div>
 
       </div>
 
-      {/* MAIN CARD */}
-
       <div className="tracking-card">
 
-        <form onSubmit={calculateWater}>
+        <div className="form-group">
 
-          <div className="form-group">
+          <label>
+            Waste Type
+          </label>
 
-            <label>
-              Daily Water Consumption
-            </label>
+          <select
+            value={wasteType}
+            onChange={(e) => {
+              setWasteType(e.target.value);
+              setEmission(null);
+              setSaved(false);
+            }}
+          >
+            <option value="Plastic">
+              Plastic
+            </option>
 
-            <div className="water-input-wrapper">
+            <option value="Paper">
+              Paper
+            </option>
 
-              <Droplets size={18} />
+            <option value="Food Waste">
+              Food Waste
+            </option>
 
-              <input
-                type="number"
-                min="0"
-                step="1"
-                placeholder="Enter litres per day"
-                value={dailyUsage}
-                onChange={(e) =>
-                  setDailyUsage(e.target.value)
-                }
-              />
+            <option value="General Waste">
+              General Waste
+            </option>
 
-              <span>Litres/day</span>
+            <option value="Recycling">
+              Recycling
+            </option>
+          </select>
 
-            </div>
+        </div>
+
+        <div
+          className="form-group"
+          style={{ marginTop: 15 }}
+        >
+
+          <label>
+            Waste Quantity
+          </label>
+
+          <input
+            type="number"
+            min="0"
+            step="0.1"
+            placeholder="Enter waste quantity in kg"
+            value={quantity}
+            onChange={(e) => {
+              setQuantity(e.target.value);
+              setEmission(null);
+              setSaved(false);
+            }}
+          />
+
+          <small>
+            Example: 2 kg
+          </small>
+
+        </div>
+
+        <button
+          className="calculate-button"
+          onClick={calculateEmission}
+        >
+          <Calculator
+            size={14}
+            style={{
+              marginRight: 6,
+              verticalAlign: "middle",
+            }}
+          />
+
+          Calculate CO₂
+        </button>
+
+        {emission !== null && (
+          <div className="calculation-result">
+
+            <span>
+              Estimated Carbon Emission
+            </span>
+
+            <strong>
+              {emission} kg CO₂
+            </strong>
 
             <small>
-              Average household usage can vary depending
-              on lifestyle and location.
+              {quantity} kg {wasteType} ×{" "}
+              {emissionFactors[wasteType]} kg CO₂/kg
             </small>
 
           </div>
-
-          <button
-            type="submit"
-            className="calculate-button"
-          >
-            Calculate Usage
-          </button>
-
-        </form>
-
-        {/* RESULT */}
-
-        {result && (
-
-          <div className="water-result-grid">
-
-            <div className="water-result-card">
-
-              <Droplets size={25} />
-
-              <span>
-                Monthly Usage
-              </span>
-
-              <strong>
-                {result.monthly.toLocaleString()} L
-              </strong>
-
-            </div>
-
-            <div className="water-result-card">
-
-              <Leaf size={25} />
-
-              <span>
-                Conservation Score
-              </span>
-
-              <strong>
-                {result.score}/100
-              </strong>
-
-            </div>
-
-          </div>
-
         )}
 
-      </div>
+        {emission !== null && (
+          <button
+            className="save-activity-button"
+            onClick={saveActivity}
+            disabled={saved}
+          >
+            <CheckCircle size={15} />
 
-      {/* WATER TIPS */}
-
-      <div className="water-tips">
-
-        <h2>
-          Water Conservation Tips
-        </h2>
-
-        <p>
-          Small changes in daily habits can save
-          thousands of litres every month.
-        </p>
-
-        <div className="water-tips-grid">
-
-          <div className="water-tip-card">
-
-            <div className="water-tip-icon">
-              <ShowerHead size={20} />
-            </div>
-
-            <h3>
-              Shorter Showers
-            </h3>
-
-            <p>
-              Reduce shower time by a few minutes
-              to conserve water.
-            </p>
-
-          </div>
-
-          <div className="water-tip-card">
-
-            <div className="water-tip-icon">
-              <GlassWater size={20} />
-            </div>
-
-            <h3>
-              Avoid Wastage
-            </h3>
-
-            <p>
-              Turn off taps when water is not
-              being actively used.
-            </p>
-
-          </div>
-
-          <div className="water-tip-card">
-
-            <div className="water-tip-icon">
-              <Waves size={20} />
-            </div>
-
-            <h3>
-              Reuse Water
-            </h3>
-
-            <p>
-              Reuse suitable household water
-              for plants and cleaning.
-            </p>
-
-          </div>
-
-        </div>
+            {saved
+              ? "Activity Saved"
+              : "Save Activity"}
+          </button>
+        )}
 
       </div>
 

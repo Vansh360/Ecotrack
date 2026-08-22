@@ -1,27 +1,53 @@
 import { useState } from "react";
-import { Leaf, Zap } from "lucide-react";
+import {
+  Zap,
+  Calculator,
+  CheckCircle,
+} from "lucide-react";
+
+import { useActivities } from "../../context/ActivityContext";
 
 export default function Electricity() {
+  const { addActivity } = useActivities();
+
   const [units, setUnits] = useState("");
-  const [result, setResult] = useState(null);
+  const [emission, setEmission] = useState(null);
+  const [saved, setSaved] = useState(false);
 
-  // Example emission factor
-  // This will later be moved to the backend/database.
-  const emissionFactor = 0.82;
+  // Temporary frontend emission factor.
+  // This will later come from the backend/database.
+  const ELECTRICITY_FACTOR = 0.82;
 
-  const calculate = (e) => {
-    e.preventDefault();
+  const calculateEmission = () => {
+    const kwh = Number(units);
 
-    const value = Number(units);
-
-    if (!value || value < 0) {
+    if (!kwh || kwh <= 0) {
       alert("Please enter a valid electricity consumption.");
       return;
     }
 
-    const emission = value * emissionFactor;
+    const result = kwh * ELECTRICITY_FACTOR;
 
-    setResult(emission.toFixed(2));
+    setEmission(Number(result.toFixed(2)));
+    setSaved(false);
+  };
+
+  const saveActivity = () => {
+    if (emission === null) {
+      alert("Please calculate the emission first.");
+      return;
+    }
+
+    addActivity({
+      category: "Electricity",
+      activityType: "Electricity Consumption",
+      quantity: Number(units),
+      unit: "kWh",
+      emission,
+      details: `${units} kWh electricity`,
+    });
+
+    setSaved(true);
   };
 
   return (
@@ -30,17 +56,18 @@ export default function Electricity() {
       <div className="tracking-header">
 
         <div className="tracking-icon">
-          <Zap size={24} />
+          <Zap size={25} />
         </div>
 
         <div>
-          <span>TRACK EMISSIONS</span>
+          <span>TRACK</span>
 
-          <h1>Electricity</h1>
+          <h1>
+            Electricity
+          </h1>
 
           <p>
-            Track your electricity consumption and
-            estimate its carbon footprint.
+            Track your household electricity consumption.
           </p>
         </div>
 
@@ -48,56 +75,76 @@ export default function Electricity() {
 
       <div className="tracking-card">
 
-        <form onSubmit={calculate}>
+        <div className="form-group">
 
-          <div className="form-group">
+          <label>
+            Electricity Consumption
+          </label>
 
-            <label>
-              Monthly Electricity Consumption
-            </label>
+          <input
+            type="number"
+            min="0"
+            placeholder="Enter electricity usage"
+            value={units}
+            onChange={(e) => {
+              setUnits(e.target.value);
+              setEmission(null);
+              setSaved(false);
+            }}
+          />
 
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              placeholder="Enter electricity usage in kWh"
-              value={units}
-              onChange={(e) => setUnits(e.target.value)}
-            />
+          <small>
+            Enter your electricity usage in kWh.
+            Example: 250 kWh
+          </small>
 
-            <small>
-              Example: 250 kWh
-            </small>
+        </div>
 
-          </div>
+        <button
+          className="calculate-button"
+          onClick={calculateEmission}
+        >
+          <Calculator
+            size={14}
+            style={{
+              marginRight: 6,
+              verticalAlign: "middle",
+            }}
+          />
 
-          <button
-            type="submit"
-            className="calculate-button"
-          >
-            Calculate CO₂
-          </button>
+          Calculate CO₂
+        </button>
 
-        </form>
-
-        {result !== null && (
+        {emission !== null && (
           <div className="calculation-result">
 
-            <Leaf size={30} />
-
             <span>
-              Estimated Electricity Emissions
+              Estimated Carbon Emission
             </span>
 
             <strong>
-              {result} kg CO₂e
+              {emission} kg CO₂
             </strong>
 
             <small>
-              Calculation: {units} kWh × {emissionFactor}
+              {units} kWh × {ELECTRICITY_FACTOR} kg CO₂/kWh
             </small>
 
           </div>
+        )}
+
+        {emission !== null && (
+          <button
+            className="save-activity-button"
+            onClick={saveActivity}
+            disabled={saved}
+          >
+            <CheckCircle size={15} />
+
+            {saved
+              ? "Activity Saved"
+              : "Save Activity"}
+          </button>
         )}
 
       </div>
