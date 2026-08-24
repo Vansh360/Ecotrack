@@ -1,3 +1,178 @@
 package com.ecotrack.backend.activity;
-import org.springframework.data.jpa.repository.*; import org.springframework.data.repository.query.Param; import java.time.*; import java.util.*;
-public interface ActivityRepository extends JpaRepository<Activity,Long>{List<Activity> findByUserIdOrderByActivityDateDesc(Long userId);List<Activity> findByUserIdAndCategoryOrderByActivityDateDesc(Long userId,String category);@Query("select coalesce(sum(a.emission),0) from Activity a where a.user.id=:uid and a.activityDate between :from and :to")double total(@Param("uid")Long uid,@Param("from")LocalDate from,@Param("to")LocalDate to);@Query("select a.category, coalesce(sum(a.emission),0) from Activity a where a.user.id=:uid and a.activityDate between :from and :to group by a.category")List<Object[]> byCategory(@Param("uid")Long uid,@Param("from")LocalDate from,@Param("to")LocalDate to);@Query("select a.activityDate, coalesce(sum(a.emission),0) from Activity a where a.user.id=:uid and a.activityDate between :from and :to group by a.activityDate order by a.activityDate")List<Object[]> daily(@Param("uid")Long uid,@Param("from")LocalDate from,@Param("to")LocalDate to);long countByUserId(Long userId);long countByUserIdAndCategory(Long userId,String category);}
+
+import com.ecotrack.backend.entity.Activity;
+import com.ecotrack.backend.user.User;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+
+public interface ActivityRepository
+        extends JpaRepository<Activity, Long> {
+
+
+    // =====================================================
+    // BASIC ACTIVITY QUERIES
+    // =====================================================
+
+    List<Activity> findAllByOrderByDateDesc();
+
+
+    List<Activity> findByUserOrderByDateDesc(
+            User user
+    );
+
+
+    List<Activity> findByUserAndDateBetween(
+            User user,
+            LocalDateTime start,
+            LocalDateTime end
+    );
+
+
+    List<Activity> findByUserAndCategory(
+            User user,
+            String category
+    );
+
+
+    // =====================================================
+    // TOTAL EMISSION
+    // =====================================================
+
+    @Query("""
+        SELECT COALESCE(SUM(a.emission), 0)
+        FROM Activity a
+        WHERE a.user.id = :userId
+        AND a.date >= :start
+        AND a.date < :end
+    """)
+    Double totalBetween(
+            @Param("userId") Long userId,
+            @Param("start") LocalDateTime start,
+            @Param("end") LocalDateTime end
+    );
+
+
+    /*
+     * Existing services use:
+     *
+     * total(userId, startDate, endDate)
+     *
+     * These default methods convert LocalDate
+     * into the LocalDateTime values required
+     * by the database query.
+     */
+
+    default Double total(
+            Long userId,
+            LocalDate start,
+            LocalDate end
+    ) {
+
+        return totalBetween(
+                userId,
+                start.atStartOfDay(),
+                end.plusDays(1).atStartOfDay()
+        );
+    }
+
+
+    // =====================================================
+    // CATEGORY ANALYTICS
+    // =====================================================
+
+    @Query("""
+        SELECT a.category, COALESCE(SUM(a.emission), 0)
+        FROM Activity a
+        WHERE a.user.id = :userId
+        AND a.date >= :start
+        AND a.date < :end
+        GROUP BY a.category
+        ORDER BY SUM(a.emission) DESC
+    """)
+    List<Object[]> byCategoryBetween(
+            @Param("userId") Long userId,
+            @Param("start") LocalDateTime start,
+            @Param("end") LocalDateTime end
+    );
+
+
+    default List<Object[]> byCategory(
+            Long userId,
+            LocalDate start,
+            LocalDate end
+    ) {
+
+        return byCategoryBetween(
+                userId,
+                start.atStartOfDay(),
+                end.plusDays(1).atStartOfDay()
+        );
+    }
+
+
+    // =====================================================
+    // DAILY ANALYTICS
+    // =====================================================
+
+    @Query("""
+        SELECT FUNCTION('DATE', a.date),
+               COALESCE(SUM(a.emission), 0)
+        FROM Activity a
+        WHERE a.user.id = :userId
+        AND a.date >= :start
+        AND a.date < :end
+        GROUP BY FUNCTION('DATE', a.date)
+        ORDER BY FUNCTION('DATE', a.date)
+    """)
+    List<Object[]> dailyBetween(
+            @Param("userId") Long userId,
+            @Param("start") LocalDateTime start,
+            @Param("end") LocalDateTime end
+    );
+
+
+    default List<Object[]> daily(
+            Long userId,
+            LocalDate start,
+            LocalDate end
+    ) {
+
+        return dailyBetween(
+                userId,
+                start.atStartOfDay(),
+                end.plusDays(1).atStartOfDay()
+        );
+    }
+
+
+    // =====================================================
+    // GAMIFICATION
+    // =====================================================
+
+    @Query("""
+        SELECT COUNT(a)
+        FROM Activity a
+        WHERE a.user.id = :userId
+    """)
+    long countByUserId(
+            @Param("userId") Long userId
+    );
+
+
+    @Query("""
+        SELECT COUNT(a)
+        FROM Activity a
+        WHERE a.user.id = :userId
+        AND LOWER(a.category) = LOWER(:category)
+    """)
+    long countByUserIdAndCategory(
+            @Param("userId") Long userId,
+            @Param("category") String category
+    );
+}

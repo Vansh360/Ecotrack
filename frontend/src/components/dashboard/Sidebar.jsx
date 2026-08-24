@@ -1,3 +1,5 @@
+import { NavLink } from "react-router-dom";
+
 import {
   LayoutDashboard,
   Car,
@@ -9,218 +11,137 @@ import {
   Sparkles,
   Trophy,
   User,
-  LogOut,
-  Leaf,
-  X,
 } from "lucide-react";
 
-import { NavLink, useNavigate } from "react-router-dom";
-
-export default function Sidebar({ mobileOpen, setMobileOpen }) {
-
-  const navigate = useNavigate();
-
-  const closeMobile = () => {
-    if (setMobileOpen) {
-      setMobileOpen(false);
-    }
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-
-    navigate("/login");
-  };
-
-  const menu = [
-    {
-      title: "Overview",
-      items: [
-        {
-          name: "Dashboard",
-          path: "/dashboard",
-          icon: <LayoutDashboard size={17} />,
-        },
-      ],
-    },
-
-    {
-      title: "Track",
-      items: [
-        {
-          name: "Transportation",
-          path: "/tracking/transportation",
-          icon: <Car size={17} />,
-        },
-        {
-          name: "Electricity",
-          path: "/tracking/electricity",
-          icon: <Zap size={17} />,
-        },
-        {
-          name: "Food",
-          path: "/tracking/food",
-          icon: <Utensils size={17} />,
-        },
-        {
-          name: "Waste",
-          path: "/tracking/waste",
-          icon: <Recycle size={17} />,
-        },
-        {
-          name: "Water",
-          path: "/tracking/water",
-          icon: <Droplets size={17} />,
-        },
-      ],
-    },
-
-    {
-      title: "Improve",
-      items: [
-        {
-          name: "Goals",
-          path: "/goals",
-          icon: <Target size={17} />,
-        },
-        {
-          name: "AI Advisor",
-          path: "/advisor",
-          icon: <Sparkles size={17} />,
-        },
-        {
-          name: "Leaderboard",
-          path: "/leaderboard",
-          icon: <Trophy size={17} />,
-        },
-      ],
-    },
-  ];
-
+export default function Sidebar() {
   return (
-    <>
-      {mobileOpen && (
-        <div
-          className="sidebar-overlay"
-          onClick={closeMobile}
-        />
-      )}
+    <aside className="sidebar">
 
-      <aside
-        className={`dashboard-sidebar ${
-          mobileOpen ? "sidebar-mobile-open" : ""
-        }`}
-      >
-
-        {/* LOGO */}
-
-        <div className="sidebar-header">
-
-          <NavLink
-            to="/dashboard"
-            className="sidebar-logo"
-            onClick={closeMobile}
-          >
-
-            <div className="sidebar-logo-icon">
-              <Leaf size={19} />
-            </div>
-
-            <div>
-              <strong>
-                EcoTrack
-              </strong>
-
-              <span>
-                Sustainability
-              </span>
-            </div>
-
-          </NavLink>
-
-          <button
-            className="sidebar-close"
-            onClick={closeMobile}
-          >
-            <X size={19} />
-          </button>
-
+      <div className="sidebar-logo">
+        <div className="logo-icon">
+          🌱
         </div>
 
-        {/* NAVIGATION */}
+        <div>
+          <strong>
+            EcoTrack
+          </strong>
 
-        <div className="sidebar-navigation">
+          <span>
+            Sustainability
+          </span>
+        </div>
+      </div>
 
-          {menu.map((section) => (
 
-            <div
-              className="sidebar-section"
-              key={section.title}
-            >
+      <nav className="sidebar-nav">
 
-              <span className="sidebar-section-title">
-                {section.title}
-              </span>
+        <NavLink
+          to="/dashboard"
+          className="sidebar-link"
+        >
+          <LayoutDashboard size={17} />
+          <span>Dashboard</span>
+        </NavLink>
 
-              {section.items.map((item) => (
 
-                <NavLink
-                  key={item.path}
-                  to={item.path}
-                  onClick={closeMobile}
-                  className={({ isActive }) =>
-                    `sidebar-link ${
-                      isActive
-                        ? "sidebar-link-active"
-                        : ""
-                    }`
-                  }
-                >
-                  {item.icon}
-                  <span>
-                    {item.name}
-                  </span>
-                </NavLink>
-
-              ))}
-
-            </div>
-
-          ))}
-
+        <div className="sidebar-section-title">
+          TRACK
         </div>
 
-        {/* BOTTOM */}
 
-        <div className="sidebar-bottom">
+        <NavLink
+          to="/tracking/transportation"
+          className="sidebar-link"
+        >
+          <Car size={17} />
+          <span>Transportation</span>
+        </NavLink>
 
-          <NavLink
-            to="/profile"
-            onClick={closeMobile}
-            className={({ isActive }) =>
-              `sidebar-link ${
-                isActive
-                  ? "sidebar-link-active"
-                  : ""
-              }`
-            }
-          >
-            <User size={17} />
-            Profile
-          </NavLink>
 
-          <button
-            className="sidebar-logout"
-            onClick={handleLogout}
-          >
-            <LogOut size={17} />
-            Logout
-          </button>
+        <NavLink
+          to="/tracking/electricity"
+          className="sidebar-link"
+        >
+          <Zap size={17} />
+          <span>Electricity</span>
+        </NavLink>
 
+
+        <NavLink
+          to="/tracking/food"
+          className="sidebar-link"
+        >
+          <Utensils size={17} />
+          <span>Food</span>
+        </NavLink>
+
+
+        <NavLink
+          to="/tracking/waste"
+          className="sidebar-link"
+        >
+          <Recycle size={17} />
+          <span>Waste</span>
+        </NavLink>
+
+
+        <NavLink
+          to="/tracking/water"
+          className="sidebar-link"
+        >
+          <Droplets size={17} />
+          <span>Water</span>
+        </NavLink>
+
+
+        <div className="sidebar-section-title">
+          IMPROVE
         </div>
 
-      </aside>
-    </>
+
+        <NavLink
+          to="/goals"
+          className="sidebar-link"
+        >
+          <Target size={17} />
+          <span>Goals</span>
+        </NavLink>
+
+
+        <NavLink
+          to="/advisor"
+          className="sidebar-link"
+        >
+          <Sparkles size={17} />
+          <span>AI Advisor</span>
+        </NavLink>
+
+
+        <div className="sidebar-section-title">
+          COMMUNITY
+        </div>
+
+
+        <NavLink
+          to="/leaderboard"
+          className="sidebar-link"
+        >
+          <Trophy size={17} />
+          <span>Leaderboard</span>
+        </NavLink>
+
+
+        <NavLink
+          to="/profile"
+          className="sidebar-link"
+        >
+          <User size={17} />
+          <span>Profile</span>
+        </NavLink>
+
+      </nav>
+
+    </aside>
   );
 }

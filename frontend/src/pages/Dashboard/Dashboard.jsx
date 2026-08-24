@@ -15,8 +15,6 @@ import {
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import Sidebar from "../../components/dashboard/Sidebar";
-import Topbar from "../../components/dashboard/Topbar";
 import StatCard from "../../components/dashboard/StatCard";
 import EmissionCard from "../../components/dashboard/EmissionCard";
 import { useActivities } from "../../context/ActivityContext";
@@ -44,15 +42,8 @@ export default function Dashboard() {
   const wasteEmission = categoryEmissions[3].value;
 
   return (
-    <div className="dashboard-layout">
-
-      <Sidebar />
-
-      <div className="dashboard-main">
-
-        <Topbar onAddActivity={() => setShowActivityModal(true)} />
-
-        <main className="dashboard-content">
+    <>
+      <main className="dashboard-content">
 
           {/* HEADER */}
 
@@ -379,7 +370,7 @@ export default function Dashboard() {
 
           </div>
 
-        </main>
+      </main>
 
         {showActivityModal && (
           <div
@@ -503,8 +494,6 @@ export default function Dashboard() {
           </div>
         )}
 
-      </div>
-
-    </div>
+    </>
   );
 }

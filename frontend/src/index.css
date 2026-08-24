@@ -5429,4 +5429,200 @@ a {
 }
 
 
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 10px 12px;
+
+  margin: 2px 0;
+
+  border-radius: 8px;
+
+  text-decoration: none;
+
+  color: #75827b;
+
+  font-size: 9px;
+  font-weight: 600;
+
+  transition: 0.2s ease;
+}
+
+.sidebar-link:hover {
+  background: #f0f6f2;
+  color: #1f7a4d;
+}
+
+.sidebar-link.active {
+  background: #e8f4ed;
+  color: #1f7a4d;
+
+  font-weight: 700;
+}
+
+.sidebar-link.active svg {
+  color: #1f7a4d;
+}
+
+/* =========================
+   ECOTRACK SIDEBAR THEME
+========================= */
+
+.dashboard-layout {
+  min-height: 100vh;
+  display: flex;
+  background: #f3f8f5;
+}
+
+.sidebar {
+  width: 220px;
+  min-height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  padding: 22px 14px;
+  box-sizing: border-box;
+  background: #123c2a;
+  border-right: 1px solid #1d5940;
+  overflow-y: auto;
+  z-index: 100;
+}
+
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 12px 25px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.logo-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 11px;
+  background: #e4f5e9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.sidebar-logo strong {
+  display: block;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.sidebar-logo span {
+  display: block;
+  color: #9cc9ad;
+  font-size: 7px;
+  margin-top: 4px;
+  font-weight: 600;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.sidebar-section-title {
+  color: #8fbaa1;
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  padding: 15px 14px 8px;
+}
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 43px;
+  padding: 0 13px;
+  margin: 0;
+  border-radius: 10px;
+  text-decoration: none;
+  color: #a9c2b3;
+  font-size: 9px;
+  font-weight: 600;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.sidebar-link svg {
+  color: #7fa18d;
+  flex-shrink: 0;
+  transition: color 0.2s ease;
+}
+
+.sidebar-link:hover {
+  background: #1a5038;
+  color: #ffffff;
+  transform: translateX(2px);
+}
+
+.sidebar-link:hover svg {
+  color: #8de0a9;
+}
+
+.sidebar-link.active {
+  background: #dff3e6;
+  color: #176b43;
+  font-weight: 800;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+}
+
+.sidebar-link.active svg {
+  color: #16804c;
+}
+
+.sidebar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: #2b684c;
+  border-radius: 10px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background: #438565;
+}
+
+.dashboard-main {
+  flex: 1;
+  min-width: 0;
+  margin-left: 220px;
+  width: auto;
+}
+
+.dashboard-content {
+  min-height: calc(100vh - 70px);
+  margin-left: 0;
+  background: #f3f8f5;
+}
+
+@media (max-width: 800px) {
+  .sidebar {
+    display: none;
+  }
+
+  .dashboard-main {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+}
+
 
