@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,89 +15,93 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.ecotrack.backend.entity.Activity;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/activities")
-@CrossOrigin(
-        origins = "http://localhost:5173"
-)
+@CrossOrigin(origins = "http://localhost:5173")
 public class ActivityController {
 
     private final ActivityService service;
 
-
-    public ActivityController(
-            ActivityService service
-    ) {
+    public ActivityController(ActivityService service) {
         this.service = service;
     }
 
 
+    // =====================================================
+    // GET ALL ACTIVITIES
+    // =====================================================
+
     @GetMapping
-    public ResponseEntity<List<Activity>>
-    getActivities() {
+    public ResponseEntity<List<ActivityDtos.ActivityResponse>>
+    getActivities(Authentication authentication) {
 
         return ResponseEntity.ok(
-                service.getAllActivities()
+                service.getAllActivityResponses(
+                        authentication.getName()
+                )
         );
     }
 
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Activity>
-    getActivity(
-            @PathVariable Long id
-    ) {
-
-        return ResponseEntity.ok(
-                service.getActivityById(id)
-        );
-    }
-
+    // =====================================================
+    // CREATE ACTIVITY
+    // =====================================================
 
     @PostMapping
-    public ResponseEntity<Activity>
+    public ResponseEntity<ActivityDtos.ActivityResponse>
     createActivity(
-            @RequestBody Activity activity
+            @Valid @RequestBody ActivityDtos.CreateActivityRequest request,
+            Authentication authentication
     ) {
 
-        Activity saved =
-                service.createActivity(
-                        activity
+        ActivityDtos.ActivityResponse response =
+                service.create(
+                        authentication.getName(),
+                        request
                 );
 
         return ResponseEntity
-                .status(
-                        HttpStatus.CREATED
-                )
-                .body(saved);
+                .status(HttpStatus.CREATED)
+                .body(response);
     }
 
+
+    // =====================================================
+    // UPDATE ACTIVITY
+    // =====================================================
 
     @PutMapping("/{id}")
-    public ResponseEntity<Activity>
+    public ResponseEntity<ActivityDtos.ActivityResponse>
     updateActivity(
             @PathVariable Long id,
-            @RequestBody Activity activity
+            @Valid @RequestBody ActivityDtos.CreateActivityRequest request,
+            Authentication authentication
     ) {
 
-        return ResponseEntity.ok(
-                service.updateActivity(
+        ActivityDtos.ActivityResponse response =
+                service.update(
                         id,
-                        activity
-                )
-        );
+                        authentication.getName(),
+                        request
+                );
+
+        return ResponseEntity.ok(response);
     }
 
 
+    // =====================================================
+    // DELETE ACTIVITY
+    // =====================================================
+
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void>
-    deleteActivity(
-            @PathVariable Long id
+    public ResponseEntity<Void> deleteActivity(
+            @PathVariable Long id,
+            Authentication authentication
     ) {
 
-        service.deleteActivity(id);
+        service.deleteActivity(id, authentication.getName());
 
         return ResponseEntity
                 .noContent()
