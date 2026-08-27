@@ -2,6 +2,7 @@ import { NavLink } from "react-router-dom";
 
 import {
   LayoutDashboard,
+  Activity,
   Car,
   Zap,
   Utensils,
@@ -42,6 +43,14 @@ export default function Sidebar() {
         >
           <LayoutDashboard size={17} />
           <span>Dashboard</span>
+        </NavLink>
+
+        <NavLink
+          to="/activities"
+          className="sidebar-link"
+        >
+          <Activity size={17} />
+          <span>Activity History</span>
         </NavLink>
 
 

@@ -6,6 +6,9 @@ import {
 } from "lucide-react";
 
 import { useActivities } from "../../context/ActivityContext";
+import {
+  calculateWasteEmission,
+} from "../../utils/carbonCalculator";
 
 export default function Waste() {
   const { addActivity } = useActivities();
@@ -16,18 +19,6 @@ export default function Waste() {
   const [emission, setEmission] = useState(null);
   const [saved, setSaved] = useState(false);
 
-  /*
-    Temporary frontend factors.
-    These will later be moved to the backend.
-  */
-  const emissionFactors = {
-    Plastic: 2.5,
-    Paper: 1.3,
-    "Food Waste": 0.8,
-    "General Waste": 1.5,
-    Recycling: 0.4,
-  };
-
   const calculateEmission = () => {
     const kg = Number(quantity);
 
@@ -36,12 +27,17 @@ export default function Waste() {
       return;
     }
 
-    const factor = emissionFactors[wasteType];
+    try {
+      const result = calculateWasteEmission({
+        wasteType,
+        quantity: kg,
+      });
 
-    const result = kg * factor;
-
-    setEmission(Number(result.toFixed(2)));
-    setSaved(false);
+      setEmission(result.emission);
+      setSaved(false);
+    } catch (error) {
+      alert(error.message);
+    }
   };
 
   const saveActivity = () => {
@@ -50,12 +46,23 @@ export default function Waste() {
       return;
     }
 
+    const result = calculateWasteEmission({
+      wasteType,
+      quantity: Number(quantity),
+    });
+
     addActivity({
       category: "Waste",
       activityType: wasteType,
       quantity: Number(quantity),
       unit: "kg",
-      emission,
+      emission: result.emission,
+      emissionFactor: result.factor,
+      emissionFactorUnit: result.factorUnit,
+      factorSource: result.source,
+      factorRegion: result.region,
+      factorYear: result.year,
+      calculationBoundary: result.boundary,
       details: `${wasteType} waste`,
     });
 
@@ -180,7 +187,7 @@ export default function Waste() {
 
             <small>
               {quantity} kg {wasteType} ×{" "}
-              {emissionFactors[wasteType]} kg CO₂/kg
+              {Number(emission) / Number(quantity)} kg CO₂/kg
             </small>
 
           </div>

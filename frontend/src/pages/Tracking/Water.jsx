@@ -6,6 +6,9 @@ import {
 } from "lucide-react";
 
 import { useActivities } from "../../context/ActivityContext";
+import {
+  calculateWaterEmission,
+} from "../../utils/carbonCalculator";
 
 export default function Water() {
   const { addActivity } = useActivities();
@@ -13,12 +16,6 @@ export default function Water() {
   const [usage, setUsage] = useState("");
   const [emission, setEmission] = useState(null);
   const [saved, setSaved] = useState(false);
-
-  /*
-    Temporary illustrative factor.
-    Later this will be configurable from the backend.
-  */
-  const WATER_FACTOR = 0.0003;
 
   const calculateEmission = () => {
     const litres = Number(usage);
@@ -28,10 +25,14 @@ export default function Water() {
       return;
     }
 
-    const result = litres * WATER_FACTOR;
+    try {
+      const result = calculateWaterEmission(litres);
 
-    setEmission(Number(result.toFixed(3)));
-    setSaved(false);
+      setEmission(result.emission);
+      setSaved(false);
+    } catch (error) {
+      alert(error.message);
+    }
   };
 
   const saveActivity = () => {
@@ -40,12 +41,20 @@ export default function Water() {
       return;
     }
 
+    const result = calculateWaterEmission(Number(usage));
+
     addActivity({
       category: "Water",
       activityType: "Water Consumption",
       quantity: Number(usage),
       unit: "litres",
-      emission,
+      emission: result.emission,
+      emissionFactor: result.factor,
+      emissionFactorUnit: result.factorUnit,
+      factorSource: result.source,
+      factorRegion: result.region,
+      factorYear: result.year,
+      calculationBoundary: result.boundary,
       details: `${usage} litres water`,
     });
 

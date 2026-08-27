@@ -6,6 +6,9 @@ import {
 } from "lucide-react";
 
 import { useActivities } from "../../context/ActivityContext";
+import {
+  calculateElectricityEmission,
+} from "../../utils/carbonCalculator";
 
 export default function Electricity() {
   const { addActivity } = useActivities();
@@ -13,10 +16,6 @@ export default function Electricity() {
   const [units, setUnits] = useState("");
   const [emission, setEmission] = useState(null);
   const [saved, setSaved] = useState(false);
-
-  // Temporary frontend emission factor.
-  // This will later come from the backend/database.
-  const ELECTRICITY_FACTOR = 0.82;
 
   const calculateEmission = () => {
     const kwh = Number(units);
@@ -26,10 +25,14 @@ export default function Electricity() {
       return;
     }
 
-    const result = kwh * ELECTRICITY_FACTOR;
+    try {
+      const result = calculateElectricityEmission(kwh);
 
-    setEmission(Number(result.toFixed(2)));
-    setSaved(false);
+      setEmission(result.emission);
+      setSaved(false);
+    } catch (error) {
+      alert(error.message);
+    }
   };
 
   const saveActivity = () => {
@@ -38,12 +41,20 @@ export default function Electricity() {
       return;
     }
 
+    const result = calculateElectricityEmission(Number(units));
+
     addActivity({
       category: "Electricity",
       activityType: "Electricity Consumption",
       quantity: Number(units),
       unit: "kWh",
-      emission,
+      emission: result.emission,
+      emissionFactor: result.factor,
+      emissionFactorUnit: result.factorUnit,
+      factorSource: result.source,
+      factorRegion: result.region,
+      factorYear: result.year,
+      calculationBoundary: result.boundary,
       details: `${units} kWh electricity`,
     });
 
@@ -127,7 +138,7 @@ export default function Electricity() {
             </strong>
 
             <small>
-              {units} kWh × {ELECTRICITY_FACTOR} kg CO₂/kWh
+              {units} kWh × {Number(emission) / Number(units)} kg CO₂/kWh
             </small>
 
           </div>

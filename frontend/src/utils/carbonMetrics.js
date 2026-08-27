@@ -1,117 +1,220 @@
-export function calculateTotalEmission(activities, startDate = null, endDate = null) {
-  return activities
-    .filter((activity) => {
-      const activityDate = new Date(activity.date);
+/*
+====================================================
+EcoTrack Carbon Metrics Engine
+====================================================
 
-      if (startDate && activityDate < startDate) {
-        return false;
-      }
+This file calculates dashboard-level analytics
+from the activities stored in ActivityContext.
 
-      if (endDate && activityDate > endDate) {
-        return false;
-      }
+All values are calculated from actual activities.
 
-      return true;
-    })
-    .reduce((total, activity) => total + Number(activity.emission || 0), 0);
+Later this same logic can be moved to the
+Spring Boot backend.
+*/
+
+export function roundNumber(value, decimals = 2) {
+  return Number(Number(value || 0).toFixed(decimals));
 }
 
-export function getMonthlyEmission(activities, year, month) {
-  return activities
-    .filter((activity) => {
-      const date = new Date(activity.date);
-
-      return date.getFullYear() === year && date.getMonth() === month;
-    })
-    .reduce((total, activity) => total + Number(activity.emission || 0), 0);
+export function getEmission(activity) {
+  return Number(activity?.emission || 0);
 }
 
-export function getCurrentMonthEmission(activities) {
-  const now = new Date();
-  return getMonthlyEmission(activities, now.getFullYear(), now.getMonth());
-}
-
-export function getPreviousMonthEmission(activities) {
-  const now = new Date();
-  const previousMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-
-  return getMonthlyEmission(
-    activities,
-    previousMonth.getFullYear(),
-    previousMonth.getMonth()
+export function isSameMonth(date, referenceDate = new Date()) {
+  if (!date) return false;
+  const activityDate = new Date(date);
+  return (
+    activityDate.getMonth() === referenceDate.getMonth() &&
+    activityDate.getFullYear() === referenceDate.getFullYear()
   );
 }
 
-export function calculateCO2Reduced(currentEmission, previousEmission) {
-  if (!previousEmission || previousEmission <= 0) {
-    return 0;
-  }
-
-  return Math.max(0, Number((previousEmission - currentEmission).toFixed(2)));
+export function isSameYear(date, referenceDate = new Date()) {
+  if (!date) return false;
+  return new Date(date).getFullYear() === referenceDate.getFullYear();
 }
 
-export function calculateEmissionChange(currentEmission, previousEmission) {
-  if (!previousEmission || previousEmission <= 0) {
-    return 0;
-  }
+export function getPreviousMonthDate(referenceDate = new Date()) {
+  return new Date(referenceDate.getFullYear(), referenceDate.getMonth() - 1, 1);
+}
 
-  return Number(
-    (((currentEmission - previousEmission) / previousEmission) * 100).toFixed(1)
+export function getCurrentMonthEmission(activities, referenceDate = new Date()) {
+  return roundNumber(
+    activities
+      .filter((activity) => isSameMonth(activity.date, referenceDate))
+      .reduce((total, activity) => total + getEmission(activity), 0)
   );
 }
 
-export function calculateGoalProgress(
-  baselineEmission,
-  currentEmission,
-  targetEmission
+export function getPreviousMonthEmission(activities, referenceDate = new Date()) {
+  const previousMonth = getPreviousMonthDate(referenceDate);
+  return roundNumber(
+    activities
+      .filter((activity) => isSameMonth(activity.date, previousMonth))
+      .reduce((total, activity) => total + getEmission(activity), 0)
+  );
+}
+
+export function getCO2Reduced(currentEmission, previousEmission) {
+  const current = Number(currentEmission || 0);
+  const previous = Number(previousEmission || 0);
+  if (previous <= 0) return 0;
+  return roundNumber(Math.max(previous - current, 0));
+}
+
+export function getCO2Change(currentEmission, previousEmission) {
+  const current = Number(currentEmission || 0);
+  const previous = Number(previousEmission || 0);
+  if (previous === 0) {
+    return { value: 0, percentage: 0, direction: "neutral" };
+  }
+  const difference = current - previous;
+  return {
+    value: roundNumber(Math.abs(difference)),
+    percentage: roundNumber((Math.abs(difference) / previous) * 100),
+    direction: difference < 0 ? "down" : difference > 0 ? "up" : "neutral",
+  };
+}
+
+export function getCategoryEmission(activities, category, options = {}) {
+  const { monthOnly = false, referenceDate = new Date() } = options;
+  return roundNumber(
+    activities
+      .filter(
+        (activity) =>
+          activity.category === category &&
+          (!monthOnly || isSameMonth(activity.date, referenceDate))
+      )
+      .reduce((total, activity) => total + getEmission(activity), 0)
+  );
+}
+
+export function getCategoryBreakdown(activities, referenceDate = new Date()) {
+  const categories = ["Transportation", "Electricity", "Food", "Waste", "Water"];
+  const result = categories.map((category) => ({
+    category,
+    emission: getCategoryEmission(activities, category, {
+      monthOnly: true,
+      referenceDate,
+    }),
+  }));
+  const total = result.reduce((sum, item) => sum + item.emission, 0);
+  return result.map((item) => ({
+    ...item,
+    percentage: total > 0 ? roundNumber((item.emission / total) * 100) : 0,
+  }));
+}
+
+export function getMonthlyEmissions(
+  activities,
+  numberOfMonths = 6,
+  referenceDate = new Date()
 ) {
-  if (!baselineEmission || baselineEmission <= targetEmission) {
-    return 0;
+  const months = [];
+  for (let i = numberOfMonths - 1; i >= 0; i--) {
+    const date = new Date(
+      referenceDate.getFullYear(),
+      referenceDate.getMonth() - i,
+      1
+    );
+    const emission = activities
+      .filter((activity) => isSameMonth(activity.date, date))
+      .reduce((total, activity) => total + getEmission(activity), 0);
+    months.push({
+      month: date.toLocaleDateString("en-IN", { month: "short" }),
+      fullMonth: date.toLocaleDateString("en-IN", {
+        month: "long",
+        year: "numeric",
+      }),
+      emission: roundNumber(emission),
+    });
   }
+  return months;
+}
 
-  const progress =
-    ((baselineEmission - currentEmission) /
-      (baselineEmission - targetEmission)) *
-    100;
+export function getYearlyEmission(activities, referenceDate = new Date()) {
+  return roundNumber(
+    activities
+      .filter((activity) => isSameYear(activity.date, referenceDate))
+      .reduce((total, activity) => total + getEmission(activity), 0)
+  );
+}
 
-  return Math.min(100, Math.max(0, Number(progress.toFixed(1))));
+export function getTotalEmission(activities) {
+  return roundNumber(
+    activities.reduce((total, activity) => total + getEmission(activity), 0)
+  );
+}
+
+export function getActivityCount(activities) {
+  return activities.length;
 }
 
 export function calculateSustainabilityScore({
-  baselineEmission,
+  activities,
   currentEmission,
+  previousEmission,
   goalProgress = 0,
-  transportationEmission = 0,
-  electricityEmission = 0,
-  wasteEmission = 0,
-  waterEmission = 0,
 }) {
-  let reductionScore = 0;
-
-  if (baselineEmission && baselineEmission > 0) {
-    const reduction =
-      ((baselineEmission - currentEmission) / baselineEmission) * 100;
-    reductionScore = Math.max(0, Math.min(40, reduction * 0.8));
+  let emissionScore = 50;
+  if (previousEmission > 0) {
+    const reduction = (previousEmission - currentEmission) / previousEmission;
+    if (reduction >= 0.2) emissionScore = 50;
+    else if (reduction >= 0.1) emissionScore = 45;
+    else if (reduction >= 0.05) emissionScore = 40;
+    else if (reduction >= 0) emissionScore = 35;
+    else if (reduction >= -0.1) emissionScore = 25;
+    else emissionScore = 15;
   }
 
-  const goalScore = Math.min(25, goalProgress * 0.25);
-  const total =
-    transportationEmission +
-    electricityEmission +
-    wasteEmission +
-    waterEmission;
-  const lowImpactRatio = total > 0 ? 1 - transportationEmission / total : 0;
-  const behaviorScore = Math.max(0, Math.min(35, lowImpactRatio * 35));
+  const activityCount = activities.length;
+  let consistencyScore = 0;
+  if (activityCount >= 30) consistencyScore = 20;
+  else if (activityCount >= 20) consistencyScore = 17;
+  else if (activityCount >= 10) consistencyScore = 14;
+  else if (activityCount >= 5) consistencyScore = 10;
+  else if (activityCount > 0) consistencyScore = 5;
 
-  return Math.round(
-    Math.max(0, Math.min(100, reductionScore + goalScore + behaviorScore))
+  const normalizedGoalProgress = Math.min(
+    Math.max(Number(goalProgress || 0), 0),
+    100
   );
+  const goalScore = roundNumber((normalizedGoalProgress / 100) * 20);
+  const categories = ["Transportation", "Electricity", "Food", "Waste", "Water"];
+  const usedCategories = new Set(
+    activities.map((activity) => activity.category)
+  );
+  const categoryScore = (usedCategories.size / categories.length) * 10;
+  const finalScore =
+    emissionScore + consistencyScore + goalScore + categoryScore;
+  return Math.min(Math.round(finalScore), 100);
 }
 
-export function getScoreLabel(score) {
-  if (score >= 90) return "Climate Hero";
-  if (score >= 75) return "Eco Warrior";
-  if (score >= 60) return "Sustainable";
-  if (score >= 40) return "Improving";
-  return "Needs Improvement";
+export function getDashboardAnalytics(
+  activities,
+  goalProgress = 0,
+  referenceDate = new Date()
+) {
+  const currentEmission = getCurrentMonthEmission(activities, referenceDate);
+  const previousEmission = getPreviousMonthEmission(activities, referenceDate);
+  const co2Reduced = getCO2Reduced(currentEmission, previousEmission);
+  const co2Change = getCO2Change(currentEmission, previousEmission);
+  const sustainabilityScore = calculateSustainabilityScore({
+    activities,
+    currentEmission,
+    previousEmission,
+    goalProgress,
+  });
+  return {
+    currentEmission,
+    previousEmission,
+    co2Reduced,
+    co2Change,
+    sustainabilityScore,
+    categoryBreakdown: getCategoryBreakdown(activities, referenceDate),
+    monthlyEmissions: getMonthlyEmissions(activities, 6, referenceDate),
+    yearlyEmission: getYearlyEmission(activities, referenceDate),
+    totalEmission: getTotalEmission(activities),
+    activityCount: getActivityCount(activities),
+  };
 }

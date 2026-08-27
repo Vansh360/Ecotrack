@@ -6,6 +6,7 @@ import Login from "./pages/Auth/Login";
 import Register from "./pages/Auth/Register";
 
 import Dashboard from "./pages/Dashboard/Dashboard";
+import ActivityHistory from "./pages/Activities/ActivityHistory";
 
 import Transportation from "./pages/Tracking/Transportation";
 import Electricity from "./pages/Tracking/Electricity";
@@ -20,6 +21,9 @@ import Profile from "./pages/Profile/Profile";
 
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import DashboardLayout from "./layouts/DashboardLayout";
+
+import AddActivity
+  from "./pages/Activity/AddActivity";
 
 function App() {
   return (
@@ -48,10 +52,24 @@ function App() {
       <Route element={<ProtectedRoute />}>
 
         <Route element={<DashboardLayout />}>
+           <Route
+    path="/dashboard"
+    element={<Dashboard />}
+  />
+
+  <Route
+    path="/activity/add"
+    element={<AddActivity />}
+  />
 
           <Route
             path="/dashboard"
             element={<Dashboard />}
+          />
+
+          <Route
+            path="/activities"
+            element={<ActivityHistory />}
           />
 
           <Route

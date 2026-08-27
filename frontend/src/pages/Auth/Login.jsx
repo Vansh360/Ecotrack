@@ -1,205 +1,178 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import {
-  ArrowRight,
-  Eye,
-  EyeOff,
-  Leaf,
-  Lock,
-  Mail,
-} from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function Login() {
   const navigate = useNavigate();
 
-  const [showPassword, setShowPassword] = useState(false);
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleSubmit = (e) => {
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async (e) => {
     e.preventDefault();
 
-    console.log({
-      email,
-      password,
-    });
+    setError("");
+    setLoading(true);
 
-    localStorage.setItem("token", "development-token");
+    try {
+      const response = await fetch(
+        "http://localhost:8080/api/auth/login",
+        {
+          method: "POST",
 
-    // Backend will be connected later.
-    navigate("/dashboard");
+          headers: {
+            "Content-Type": "application/json",
+          },
+
+          body: JSON.stringify({
+            email,
+            password,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      console.log("Login response:", data);
+
+      if (!response.ok) {
+        throw new Error(
+          data.message || "Login failed"
+        );
+      }
+
+      // IMPORTANT:
+      // Save the real JWT returned by Spring Boot
+      if (!data.token) {
+        throw new Error(
+          "Login succeeded but no JWT token was returned."
+        );
+      }
+
+      localStorage.setItem(
+        "token",
+        data.token
+      );
+
+      // Save basic user information
+      localStorage.setItem(
+        "user",
+        JSON.stringify({
+          id: data.userId,
+          name: data.name,
+          email: data.email,
+          role: data.role,
+        })
+      );
+
+      console.log(
+        "JWT saved successfully"
+      );
+
+      navigate("/dashboard");
+
+    } catch (error) {
+
+      console.error(
+        "Login error:",
+        error
+      );
+
+      setError(
+        error.message ||
+        "Unable to login"
+      );
+
+    } finally {
+
+      setLoading(false);
+
+    }
   };
 
   return (
     <div className="auth-page">
 
-      <div className="auth-brand-side">
+      <div className="auth-card">
 
-        <Link to="/" className="auth-logo">
-          <span className="logo-icon">
-            <Leaf size={22} />
-          </span>
-
-          <span>
-            Eco<span>Track</span>
-          </span>
-        </Link>
-
-        <div className="auth-message">
-
-          <span>
-            WELCOME BACK
-          </span>
+        <div className="auth-header">
 
           <h1>
-            Continue your
-            <strong>
-              sustainability journey.
-            </strong>
+            Welcome Back
           </h1>
 
           <p>
-            Track your impact and continue working
-            toward a more sustainable lifestyle.
+            Login to continue tracking
+            your sustainability.
           </p>
 
         </div>
 
-      </div>
+        <form
+          onSubmit={handleLogin}
+          className="auth-form"
+        >
 
-      <div className="auth-form-side">
+          <div className="form-group">
 
-        <div className="auth-form-container">
+            <label>
+              Email
+            </label>
 
-          <Link to="/" className="mobile-auth-logo">
-            <Leaf size={22} />
-            EcoTrack
-          </Link>
-
-          <div className="auth-heading">
-
-            <span className="section-label">
-              SIGN IN
-            </span>
-
-            <h2>
-              Welcome back
-            </h2>
-
-            <p>
-              Sign in to access your EcoTrack dashboard.
-            </p>
+            <input
+              type="email"
+              value={email}
+              placeholder="Enter your email"
+              onChange={(e) =>
+                setEmail(e.target.value)
+              }
+              required
+            />
 
           </div>
 
-          <form
-            className="auth-form"
-            onSubmit={handleSubmit}
-          >
 
-            <div className="form-group">
+          <div className="form-group">
 
-              <label>
-                Email address
-              </label>
-
-              <div className="input-box">
-
-                <Mail size={18} />
-
-                <input
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) =>
-                    setEmail(e.target.value)
-                  }
-                  required
-                />
-
-              </div>
-
-            </div>
-
-            <div className="form-group">
-
-              <div className="password-header">
-
-                <label>
-                  Password
-                </label>
-
-                <a href="#forgot">
-                  Forgot password?
-                </a>
-
-              </div>
-
-              <div className="input-box">
-
-                <Lock size={18} />
-
-                <input
-                  type={
-                    showPassword
-                      ? "text"
-                      : "password"
-                  }
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) =>
-                    setPassword(e.target.value)
-                  }
-                  required
-                />
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    setShowPassword(!showPassword)
-                  }
-                >
-                  {showPassword ? (
-                    <EyeOff size={17} />
-                  ) : (
-                    <Eye size={17} />
-                  )}
-                </button>
-
-              </div>
-
-            </div>
-
-            <label className="remember">
-
-              <input type="checkbox" />
-
-              <span>
-                Remember me
-              </span>
-
+            <label>
+              Password
             </label>
 
-            <button
-              type="submit"
-              className="auth-submit"
-            >
-              Sign In
-              <ArrowRight size={18} />
-            </button>
+            <input
+              type="password"
+              value={password}
+              placeholder="Enter your password"
+              onChange={(e) =>
+                setPassword(e.target.value)
+              }
+              required
+            />
 
-          </form>
+          </div>
 
-          <p className="auth-switch">
-            Don't have an account?
 
-            <Link to="/register">
-              Create account
-            </Link>
-          </p>
+          {error && (
+            <div className="auth-error">
+              {error}
+            </div>
+          )}
 
-        </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="auth-button"
+          >
+
+            {loading
+              ? "Logging in..."
+              : "Login"}
+
+          </button>
+
+        </form>
 
       </div>
 

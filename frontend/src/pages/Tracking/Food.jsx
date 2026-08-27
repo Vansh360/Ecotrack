@@ -6,6 +6,9 @@ import {
 } from "lucide-react";
 
 import { useActivities } from "../../context/ActivityContext";
+import {
+  calculateFoodEmission,
+} from "../../utils/carbonCalculator";
 
 export default function Food() {
   const { addActivity } = useActivities();
@@ -16,21 +19,6 @@ export default function Food() {
   const [emission, setEmission] = useState(null);
   const [saved, setSaved] = useState(false);
 
-  /*
-    Temporary frontend factors.
-
-    These will later be stored in the
-    backend/database and can be updated
-    by an administrator.
-  */
-  const emissionFactors = {
-    Vegan: 0.9,
-    Vegetarian: 1.2,
-    Chicken: 6.9,
-    Fish: 5.5,
-    Beef: 27.0,
-  };
-
   const calculateEmission = () => {
     const kg = Number(quantity);
 
@@ -39,12 +27,17 @@ export default function Food() {
       return;
     }
 
-    const factor = emissionFactors[foodType];
+    try {
+      const result = calculateFoodEmission({
+        foodType,
+        quantity: kg,
+      });
 
-    const result = kg * factor;
-
-    setEmission(Number(result.toFixed(2)));
-    setSaved(false);
+      setEmission(result.emission);
+      setSaved(false);
+    } catch (error) {
+      alert(error.message);
+    }
   };
 
   const saveActivity = () => {
@@ -53,12 +46,23 @@ export default function Food() {
       return;
     }
 
+    const result = calculateFoodEmission({
+      foodType,
+      quantity: Number(quantity),
+    });
+
     addActivity({
       category: "Food",
       activityType: foodType,
       quantity: Number(quantity),
       unit: "kg",
-      emission,
+      emission: result.emission,
+      emissionFactor: result.factor,
+      emissionFactorUnit: result.factorUnit,
+      factorSource: result.source,
+      factorRegion: result.region,
+      factorYear: result.year,
+      calculationBoundary: result.boundary,
       details: `${foodType} food`,
     });
 
@@ -183,7 +187,7 @@ export default function Food() {
 
             <small>
               {quantity} kg {foodType} ×{" "}
-              {emissionFactors[foodType]} kg CO₂/kg
+              {Number(emission) / Number(quantity)} kg CO₂/kg
             </small>
 
           </div>

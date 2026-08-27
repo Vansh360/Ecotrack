@@ -1,499 +1,792 @@
 import {
   Activity,
-  Leaf,
-  TrendingDown,
-  Target,
+  ArrowDownRight,
+  ArrowUpRight,
   BarChart3,
   Car,
-  Zap,
-  Utensils,
-  Recycle,
   Droplets,
-  X,
+  Leaf,
+  Recycle,
+  Target,
+  Utensils,
+  Zap,
 } from "lucide-react";
 
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import {
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
 
-import StatCard from "../../components/dashboard/StatCard";
-import EmissionCard from "../../components/dashboard/EmissionCard";
-import { useActivities } from "../../context/ActivityContext";
+import useDashboard from "../../hooks/useDashboard";
+import { useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { getActivities } from "../../services/activityService";
 
 export default function Dashboard() {
+
   const navigate = useNavigate();
-  const [showActivityModal, setShowActivityModal] = useState(false);
-  const {
-    activities,
-    totalEmission,
-    getCategoryEmission,
-  } = useActivities();
 
-  const categoryEmissions = [
-    { name: "Transportation", value: getCategoryEmission("Transportation") },
-    { name: "Electricity", value: getCategoryEmission("Electricity") },
-    { name: "Food", value: getCategoryEmission("Food") },
-    { name: "Waste", value: getCategoryEmission("Waste") },
-    { name: "Water", value: getCategoryEmission("Water") },
-  ];
+  const [activities, setActivities] = useState([]);
+  const [loadingActivities, setLoadingActivities] = useState(true);
+  const [activityError, setActivityError] = useState("");
 
-  const transportationEmission = categoryEmissions[0].value;
-  const electricityEmission = categoryEmissions[1].value;
-  const foodEmission = categoryEmissions[2].value;
-  const wasteEmission = categoryEmissions[3].value;
+  const loadActivities = async () => {
+    try {
+      setLoadingActivities(true);
+      setActivityError("");
+
+      const result = await getActivities();
+
+      console.log("Activities received:", result);
+
+      setActivities(Array.isArray(result) ? result : []);
+    } catch (error) {
+      console.error("Activity loading error:", error);
+      setActivityError(error.message);
+    } finally {
+      setLoadingActivities(false);
+    }
+  };
+
+  useEffect(() => {
+    loadActivities();
+  }, []);
+
+  const totalEmission = useMemo(() => {
+    return activities.reduce(
+      (total, activity) =>
+        total + Number(activity.emission || 0),
+      0
+    );
+  }, [activities]);
+
+  const categoryEmissions = useMemo(() => {
+    const result = {};
+
+    activities.forEach((activity) => {
+      const category = activity.category || "Other";
+
+      result[category] =
+        (result[category] || 0) + Number(activity.emission || 0);
+    });
+
+    return result;
+  }, [activities]);
+
+  const { data, loading, error } = useDashboard();
+  const currentEmission = totalEmission;
+  const co2Reduced = data?.co2Reduced ?? 0;
+  const sustainabilityScore = data?.sustainabilityScore ?? 0;
+  const goalProgress = data?.goalProgress ?? 0;
+  const monthlyEmissions = data?.monthlyEmissions ?? [];
+  const categoryBreakdown = Object.entries(categoryEmissions).map(
+    ([category, emission]) => ({ category, emission, percentage: 0 })
+  );
+  const totalCategoryEmission = categoryBreakdown.reduce(
+    (total, item) => total + item.emission,
+    0
+  );
+  const normalizedCategoryBreakdown = categoryBreakdown.map((item) => ({
+    ...item,
+    percentage: totalCategoryEmission
+      ? Math.round((item.emission / totalCategoryEmission) * 100)
+      : 0,
+  }));
+  const displayCategoryBreakdown = normalizedCategoryBreakdown;
+  const activityCount = activities.length;
+  const co2Change = { direction: "same", percentage: 0 };
+
+
+  const categoryIcons = {
+    Transportation: Car,
+    Electricity: Zap,
+    Food: Utensils,
+    Waste: Recycle,
+    Water: Droplets,
+  };
+
 
   return (
-    <>
-      <main className="dashboard-content">
+    <div className="dashboard-page">
 
-          {/* HEADER */}
+      {/* ===================================
+          HEADER
+      =================================== */}
 
-          <div className="dashboard-header">
+      <div className="dashboard-heading">
 
-            <div>
-              <span className="dashboard-label">
-                OVERVIEW
-              </span>
+        <div>
 
-              <h1>
-                Good evening, Vansh 🌱
-              </h1>
+          <span className="page-eyebrow">
+            OVERVIEW
+          </span>
 
-              <p>
-                Here's an overview of your environmental
-                impact this month.
-              </p>
-            </div>
+          <h1>
+            Sustainability Dashboard
+          </h1>
 
-            <button
-              className="add-activity-button"
-              onClick={() => setShowActivityModal(true)}
-            >
-              <span>+</span>
-              Add Activity
-            </button>
+          <p>
+            Track your environmental impact
+            and improve your sustainability.
+          </p>
 
-          </div>
+          {(loading || loadingActivities) && <p>Loading dashboard data...</p>}
+          {error && <p>{error}</p>}
+          {activityError && <p>{activityError}</p>}
 
-          {/* STAT CARDS */}
+        </div>
 
-          <div className="dashboard-stat-grid">
+        <button
+          className="add-activity-button"
+          onClick={() => navigate("/activity/add")}
+        >
+          + Add Activity
+        </button>
 
-            <StatCard
-              title="Carbon Footprint"
-              value={totalEmission.toFixed(1)}
-              unit="kg"
-              change="8.4%"
-              positive
-              icon={<Leaf size={21} />}
-            />
 
-            <StatCard
-              title="Sustainability Score"
-              value="78"
-              unit="/100"
-              change="5.2%"
-              positive
-              icon={<Target size={21} />}
-            />
+        <div className="dashboard-date">
 
-            <StatCard
-              title="CO₂ Reduced"
-              value="38.5"
-              unit="kg"
-              change="12.1%"
-              positive
-              icon={<TrendingDown size={21} />}
-            />
+          <span>
+            Current Month
+          </span>
 
-            <StatCard
-              title="Current Goal"
-              value="62"
-              unit="%"
-              change="On track"
-              positive
-              icon={<BarChart3 size={21} />}
-            />
-
-          </div>
-
-          {/* MAIN GRID */}
-
-          <div className="dashboard-grid">
-
-            {/* CHART */}
-
-            <section className="dashboard-panel chart-panel">
-
-              <div className="panel-header">
-
-                <div>
-                  <h3>Carbon Emissions</h3>
-
-                  <p>
-                    Your current emissions by category
-                  </p>
-                </div>
-
-                <select>
-                  <option>Last 6 months</option>
-                  <option>Last year</option>
-                </select>
-
-              </div>
-
-              <div className="chart-area">
-
-                <div className="category-chart">
-                  {categoryEmissions.map((category) => (
-                    <div className="category-chart-row" key={category.name}>
-                      <span>{category.name}</span>
-                      <div className="category-chart-track">
-                        <div
-                          className="category-chart-bar"
-                          style={{
-                            width: `${totalEmission ? Math.max((category.value / totalEmission) * 100, category.value ? 4 : 0) : 0}%`,
-                          }}
-                        />
-                      </div>
-                      <strong>{category.value.toFixed(1)} kg</strong>
-                    </div>
-                  ))}
-                </div>
-
-              </div>
-
-            </section>
-
-            {/* SCORE */}
-
-            <section className="dashboard-panel score-panel">
-
-              <div className="panel-header">
-
-                <div>
-                  <h3>Sustainability Score</h3>
-                  <p>Your current performance</p>
-                </div>
-
-              </div>
-
-              <div className="big-score">
-
-                <div className="score-circle">
-                  <strong>78</strong>
-                  <span>/100</span>
-                </div>
-
-              </div>
-
-              <div className="score-status">
-                <Leaf size={17} />
-                <strong>Good progress!</strong>
-              </div>
-
-              <p className="score-text">
-                You're doing better than 68% of
-                EcoTrack users.
-              </p>
-
-            </section>
-
-          </div>
-
-          {/* EMISSION BREAKDOWN */}
-
-          <div className="section-title-row">
-
-            <div>
-              <h2>Emission Breakdown</h2>
-              <p>
-                See where your carbon footprint comes from.
-              </p>
-            </div>
-
-            <a href="#all">
-              View all →
-            </a>
-
-          </div>
-
-          <div className="emission-grid">
-
-            <EmissionCard
-              title="Transportation"
-              value={transportationEmission.toFixed(1)}
-              percentage={totalEmission ? Math.round((transportationEmission / totalEmission) * 100) : 0}
-              icon={<Car size={20} />}
-            />
-
-            <EmissionCard
-              title="Electricity"
-              value={electricityEmission.toFixed(1)}
-              percentage={totalEmission ? Math.round((electricityEmission / totalEmission) * 100) : 0}
-              icon={<Zap size={20} />}
-            />
-
-            <EmissionCard
-              title="Food"
-              value={foodEmission.toFixed(1)}
-              percentage={totalEmission ? Math.round((foodEmission / totalEmission) * 100) : 0}
-              icon={<Utensils size={20} />}
-            />
-
-            <EmissionCard
-              title="Waste"
-              value={wasteEmission.toFixed(1)}
-              percentage={totalEmission ? Math.round((wasteEmission / totalEmission) * 100) : 0}
-              icon={<Recycle size={20} />}
-            />
-
-          </div>
-
-          <section className="dashboard-panel recent-activities">
-            <div className="panel-header">
-              <div>
-                <h2>Recent Activities</h2>
-                <p>Your latest carbon footprint records</p>
-              </div>
-            </div>
-
-            {activities.length === 0 ? (
-              <div className="empty-activities">
-                <Leaf size={25} />
-                <strong>No activities yet</strong>
-                <p>Click &quot;Add Activity&quot; to start tracking your carbon footprint.</p>
-              </div>
-            ) : (
-              <div className="activity-history-list">
-                {activities.slice(0, 5).map((activity) => (
-                  <div className="activity-history-item" key={activity.id}>
-                    <div>
-                      <strong>{activity.category}</strong>
-                      <span>
-                        {activity.details || activity.activityType} &bull; {activity.quantity} {activity.unit}
-                      </span>
-                    </div>
-                    <strong className="activity-emission">
-                      {Number(activity.emission).toFixed(2)} kg
-                    </strong>
-                  </div>
-                ))}
-              </div>
+          <strong>
+            {new Date().toLocaleDateString(
+              "en-IN",
+              {
+                month: "long",
+                year: "numeric",
+              }
             )}
-          </section>
+          </strong>
 
-          {/* BOTTOM */}
+        </div>
 
-          <div className="dashboard-grid bottom-grid">
+      </div>
 
-            {/* GOAL */}
 
-            <section className="dashboard-panel">
+      {/* ===================================
+          MAIN METRIC CARDS
+      =================================== */}
 
-              <div className="panel-header">
+      <div className="dashboard-metrics">
 
-                <div>
-                  <h3>Monthly Goal</h3>
 
-                  <p>
-                    Reduce emissions below 250 kg
-                  </p>
-                </div>
+        {/* CARBON FOOTPRINT */}
 
-                <Target size={22} />
+        <MetricCard
+          icon={<Leaf size={19} />}
+          title="Carbon Footprint"
+          value={currentEmission.toFixed(2)}
+          unit="kg CO₂e"
+          description="This month"
+        />
+
+
+        {/* SUSTAINABILITY SCORE */}
+
+        <MetricCard
+          icon={<Target size={19} />}
+          title="Sustainability Score"
+          value={sustainabilityScore}
+          unit="/100"
+          description="Current performance"
+        />
+
+
+        {/* CO2 REDUCED */}
+
+        <MetricCard
+          icon={<ArrowDownRight size={19} />}
+          title="CO₂ Reduced"
+          value={co2Reduced.toFixed(2)}
+          unit="kg"
+          description={
+            co2Change.direction ===
+            "down"
+              ? `${co2Change.percentage}% lower than last month`
+              : "Compared with last month"
+          }
+        />
+
+
+        {/* GOAL */}
+
+        <MetricCard
+          icon={<Target size={19} />}
+          title="Current Goal"
+          value={goalProgress}
+          unit="%"
+          description="Goal progress"
+        />
+
+      </div>
+
+
+      {/* ===================================
+          CHANGE INDICATOR
+      =================================== */}
+
+      {activityCount > 0 && (
+        <div
+          className={`dashboard-change ${
+            co2Change.direction
+          }`}
+        >
+
+          {co2Change.direction ===
+            "down" ? (
+            <ArrowDownRight
+              size={17}
+            />
+          ) : co2Change.direction ===
+            "up" ? (
+            <ArrowUpRight
+              size={17}
+            />
+          ) : (
+            <Activity
+              size={17}
+            />
+          )}
+
+
+          <span>
+
+            {co2Change.direction ===
+              "down"
+              ? `Your emissions are ${co2Change.percentage}% lower than last month.`
+              : co2Change.direction ===
+                "up"
+              ? `Your emissions are ${co2Change.percentage}% higher than last month.`
+              : "No previous-month comparison available yet."}
+
+          </span>
+
+        </div>
+      )}
+
+
+      {/* ===================================
+          CHART SECTION
+      =================================== */}
+
+      <div className="dashboard-chart-grid">
+
+
+        {/* LINE CHART */}
+
+        <div className="dashboard-panel">
+
+          <div className="panel-header">
+
+            <div>
+
+              <h2>
+                Carbon Emissions
+              </h2>
+
+              <p>
+                Monthly CO₂e emissions
+              </p>
+
+            </div>
+
+          </div>
+
+
+          <div className="chart-container">
+
+            <ResponsiveContainer
+              width="100%"
+              height="100%"
+            >
+
+              <LineChart
+                data={
+                  monthlyEmissions
+                }
+              >
+
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  vertical={false}
+                />
+
+                <XAxis
+                  dataKey="month"
+                  tick={{
+                    fontSize: 11,
+                  }}
+                />
+
+                <YAxis
+                  tick={{
+                    fontSize: 11,
+                  }}
+                />
+
+                <Tooltip
+                  formatter={(value) => [
+                    `${value} kg CO₂e`,
+                    "Emission",
+                  ]}
+                />
+
+                <Line
+                  type="monotone"
+                  dataKey="emission"
+                  stroke="#1f7a4d"
+                  strokeWidth={3}
+                  dot={{
+                    r: 4,
+                  }}
+                  activeDot={{
+                    r: 6,
+                  }}
+                />
+
+              </LineChart>
+
+            </ResponsiveContainer>
+
+          </div>
+
+        </div>
+
+
+        {/* CATEGORY PIE CHART */}
+
+        <div className="dashboard-panel">
+
+          <div className="panel-header">
+
+            <div>
+
+              <h2>
+                Emission Sources
+              </h2>
+
+              <p>
+                Where your emissions come from
+              </p>
+
+            </div>
+
+          </div>
+
+
+          <div className="pie-chart-container">
+
+            {displayCategoryBreakdown.some(
+              (item) =>
+                item.emission > 0
+            ) ? (
+
+              <ResponsiveContainer
+                width="100%"
+                height="100%"
+              >
+
+                <PieChart>
+
+                  <Pie
+                    data={
+                      displayCategoryBreakdown.filter(
+                        (item) =>
+                          item.emission >
+                          0
+                      )
+                    }
+                    dataKey="emission"
+                    nameKey="category"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={90}
+                    innerRadius={55}
+                  >
+
+                    {displayCategoryBreakdown
+                      .filter(
+                        (item) =>
+                          item.emission >
+                          0
+                      )
+                      .map(
+                        (
+                          item,
+                          index
+                        ) => (
+
+                          <Cell
+                            key={
+                              item.category
+                            }
+                            fill={
+                              [
+                                "#1f7a4d",
+                                "#4c956c",
+                                "#74b49b",
+                                "#a8d5ba",
+                                "#d7eadf",
+                              ][
+                                index %
+                                  5
+                              ]
+                            }
+                          />
+
+                        )
+                      )}
+
+                  </Pie>
+
+                  <Tooltip
+                    formatter={(
+                      value
+                    ) => [
+                      `${value} kg`,
+                      "CO₂e",
+                    ]}
+                  />
+
+                </PieChart>
+
+              </ResponsiveContainer>
+
+            ) : (
+
+              <div className="empty-chart">
+
+                <BarChart3
+                  size={32}
+                />
+
+                <span>
+                  No activity data yet
+                </span>
 
               </div>
 
-              <div className="goal-values">
+            )}
+
+          </div>
+
+
+          {/* CATEGORY LIST */}
+
+          <div className="category-list">
+
+            {displayCategoryBreakdown.map(
+              (item) => {
+
+                const Icon =
+                  categoryIcons[
+                    item.category
+                  ];
+
+                return (
+                  <div
+                    className="category-row"
+                    key={
+                      item.category
+                    }
+                  >
+
+                    <div className="category-name">
+
+                      <Icon
+                        size={15}
+                      />
+
+                      <span>
+                        {
+                          item.category
+                        }
+                      </span>
+
+                    </div>
+
+
+                    <div>
+
+                      <strong>
+                        {
+                          item.emission.toFixed(
+                            2
+                          )
+                        } kg
+                      </strong>
+
+                      <span>
+                        {" "}
+                        (
+                        {
+                          item.percentage
+                        }
+                        %)
+                      </span>
+
+                    </div>
+
+                  </div>
+                );
+
+              }
+            )}
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      {/* ===================================
+          CATEGORY CARDS
+      =================================== */}
+
+      <div className="dashboard-section-title">
+
+        <div>
+
+          <span className="page-eyebrow">
+            TRACKING
+          </span>
+
+          <h2>
+            This Month by Category
+          </h2>
+
+        </div>
+
+      </div>
+
+
+      <div className="category-cards">
+
+        {displayCategoryBreakdown.map(
+          (item) => {
+
+            const Icon =
+              categoryIcons[
+                item.category
+              ];
+
+            return (
+
+              <div
+                className="category-card"
+                key={
+                  item.category
+                }
+              >
+
+                <div className="category-card-icon">
+
+                  <Icon size={18} />
+
+                </div>
+
+                <span>
+                  {item.category}
+                </span>
 
                 <strong>
-                  420
-                  <small> kg</small>
+                  {
+                    item.emission.toFixed(
+                      2
+                    )
+                  } kg
                 </strong>
 
-                <span>
-                  Target: 250 kg
-                </span>
+                <small>
+                  {item.percentage}% of
+                  total emissions
+                </small>
 
               </div>
 
-              <div className="goal-progress">
+            );
 
-                <div></div>
-
-              </div>
-
-              <div className="goal-footer">
-
-                <span>
-                  62% progress
-                </span>
-
-                <span>
-                  170 kg remaining
-                </span>
-
-              </div>
-
-            </section>
-
-            {/* AI */}
-
-            <section className="dashboard-panel ai-dashboard-card">
-
-              <div className="ai-small-icon">
-                ✨
-              </div>
-
-              <span className="dashboard-label">
-                AI ADVISOR
-              </span>
-
-              <h3>
-                One simple change can make a difference.
-              </h3>
-
-              <p>
-                Try replacing two car trips per week
-                with public transportation.
-              </p>
-
-              <strong>
-                Potential saving: 28 kg CO₂/month
-              </strong>
-
-              <button>
-                View Recommendation →
-              </button>
-
-            </section>
-
-          </div>
-
-      </main>
-
-        {showActivityModal && (
-          <div
-            className="activity-modal-overlay"
-            onClick={() => setShowActivityModal(false)}
-          >
-            <div
-              className="activity-modal"
-              onClick={(event) => event.stopPropagation()}
-            >
-              <div className="activity-modal-header">
-                <div>
-                  <span className="modal-label">ECOTRACK</span>
-                  <h2>Add Activity</h2>
-                  <p>Select what you want to track today.</p>
-                </div>
-
-                <button
-                  className="modal-close"
-                  onClick={() => setShowActivityModal(false)}
-                  aria-label="Close activity modal"
-                >
-                  <X size={18} />
-                </button>
-              </div>
-
-              <div className="activity-options">
-                <button
-                  className="activity-option"
-                  onClick={() => {
-                    setShowActivityModal(false);
-                    navigate("/tracking/transportation");
-                  }}
-                >
-                  <div className="activity-option-icon transportation-icon">
-                    <Car size={22} />
-                  </div>
-                  <div>
-                    <strong>Transportation</strong>
-                    <span>Car, bike, bus, train or flight</span>
-                  </div>
-                  <span className="activity-arrow">→</span>
-                </button>
-
-                <button
-                  className="activity-option"
-                  onClick={() => {
-                    setShowActivityModal(false);
-                    navigate("/tracking/electricity");
-                  }}
-                >
-                  <div className="activity-option-icon electricity-icon">
-                    <Zap size={22} />
-                  </div>
-                  <div>
-                    <strong>Electricity</strong>
-                    <span>Track your electricity consumption</span>
-                  </div>
-                  <span className="activity-arrow">→</span>
-                </button>
-
-                <button
-                  className="activity-option"
-                  onClick={() => {
-                    setShowActivityModal(false);
-                    navigate("/tracking/food");
-                  }}
-                >
-                  <div className="activity-option-icon food-icon">
-                    <Utensils size={22} />
-                  </div>
-                  <div>
-                    <strong>Food</strong>
-                    <span>Track your food consumption</span>
-                  </div>
-                  <span className="activity-arrow">→</span>
-                </button>
-
-                <button
-                  className="activity-option"
-                  onClick={() => {
-                    setShowActivityModal(false);
-                    navigate("/tracking/waste");
-                  }}
-                >
-                  <div className="activity-option-icon waste-icon">
-                    <Recycle size={22} />
-                  </div>
-                  <div>
-                    <strong>Waste</strong>
-                    <span>Plastic, paper and food waste</span>
-                  </div>
-                  <span className="activity-arrow">→</span>
-                </button>
-
-                <button
-                  className="activity-option"
-                  onClick={() => {
-                    setShowActivityModal(false);
-                    navigate("/tracking/water");
-                  }}
-                >
-                  <div className="activity-option-icon water-icon">
-                    <Droplets size={22} />
-                  </div>
-                  <div>
-                    <strong>Water</strong>
-                    <span>Track your daily water usage</span>
-                  </div>
-                  <span className="activity-arrow">→</span>
-                </button>
-              </div>
-
-              <button
-                className="activity-cancel"
-                onClick={() => setShowActivityModal(false)}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
+          }
         )}
 
-    </>
+      </div>
+
+
+      {/* ===================================
+          RECENT ACTIVITIES
+      =================================== */}
+
+      {activities.length > 0 && (
+
+        <>
+
+          <div className="dashboard-section-title">
+
+            <div>
+
+              <span className="page-eyebrow">
+                ACTIVITY
+              </span>
+
+              <h2>
+                Recent Activities
+              </h2>
+
+            </div>
+
+          </div>
+
+
+          <div className="activity-list">
+
+            {activities.map(
+              (activity) => {
+
+                const Icon =
+                  categoryIcons[
+                    activity.category
+                  ] || Leaf;
+
+                return (
+
+                  <div
+                    className="activity-row"
+                    key={activity.id}
+                  >
+
+                    <div className="activity-icon">
+                      <Icon size={20} />
+                    </div>
+
+
+                    <div className="activity-info">
+
+                      <strong>
+                        {activity.activityType ||
+                          activity.category}
+                      </strong>
+
+                      <span>
+                        {activity.category}
+                        {" • "}
+                        {activity.quantity}
+                        {" "}
+                        {activity.unit}
+                      </span>
+
+                    </div>
+
+
+                    <div className="activity-emission">
+
+                      <strong>
+                        {Number(
+                          activity.emission || 0
+                        ).toFixed(2)}
+                        {" "}
+                        kg
+                      </strong>
+
+                      <span>
+                        CO₂e
+                      </span>
+
+                    </div>
+
+                  </div>
+
+                );
+              }
+            )}
+
+          </div>
+
+        </>
+
+      )}
+
+
+      {/* ===================================
+          EMPTY STATE
+      =================================== */}
+
+      {!loadingActivities && activities.length === 0 && (
+
+        <div className="dashboard-empty">
+
+          <Leaf size={32} />
+
+          <h3>
+            Start tracking your footprint
+          </h3>
+
+          <p>
+            Add transportation,
+            electricity, food, waste or
+            water activities to see your
+            real carbon footprint.
+          </p>
+
+        </div>
+
+      )}
+
+    </div>
+  );
+}
+
+
+/* =========================================
+   METRIC CARD
+========================================= */
+
+function MetricCard({
+  icon,
+  title,
+  value,
+  unit,
+  description,
+}) {
+
+  return (
+
+    <div className="metric-card">
+
+      <div className="metric-icon">
+        {icon}
+      </div>
+
+      <span className="metric-title">
+        {title}
+      </span>
+
+      <div className="metric-value">
+
+        <strong>
+          {value}
+        </strong>
+
+        <span>
+          {unit}
+        </span>
+
+      </div>
+
+      <small>
+        {description}
+      </small>
+
+    </div>
   );
 }

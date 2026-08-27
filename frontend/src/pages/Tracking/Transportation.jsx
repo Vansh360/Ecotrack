@@ -6,6 +6,9 @@ import {
 } from "lucide-react";
 
 import { useActivities } from "../../context/ActivityContext";
+import {
+  calculateTransportationEmission,
+} from "../../utils/carbonCalculator";
 
 export default function Transportation() {
   const { addActivity } = useActivities();
@@ -25,35 +28,18 @@ export default function Transportation() {
       return;
     }
 
-    let factor = 0.192;
+    try {
+      const result = calculateTransportationEmission({
+        vehicle,
+        fuel,
+        distance: km,
+      });
 
-    if (vehicle === "Bike") {
-      factor = 0.103;
+      setEmission(result.emission);
+      setSaved(false);
+    } catch (error) {
+      alert(error.message);
     }
-
-    if (vehicle === "Bus") {
-      factor = 0.089;
-    }
-
-    if (vehicle === "Train") {
-      factor = 0.041;
-    }
-
-    if (vehicle === "Flight") {
-      factor = 0.255;
-    }
-
-    if (
-      vehicle === "Car" &&
-      fuel === "Diesel"
-    ) {
-      factor = 0.171;
-    }
-
-    const result = km * factor;
-
-    setEmission(Number(result.toFixed(2)));
-    setSaved(false);
   };
 
   const saveActivity = () => {
@@ -62,12 +48,24 @@ export default function Transportation() {
       return;
     }
 
+    const result = calculateTransportationEmission({
+      vehicle,
+      fuel,
+      distance: Number(distance),
+    });
+
     addActivity({
       category: "Transportation",
       activityType: vehicle,
       quantity: Number(distance),
       unit: "km",
-      emission: emission,
+      emission: result.emission,
+      emissionFactor: result.factor,
+      emissionFactorUnit: result.factorUnit,
+      factorSource: result.source,
+      factorRegion: result.region,
+      factorYear: result.year,
+      calculationBoundary: result.boundary,
       details:
         vehicle === "Car"
           ? `${fuel} car`
