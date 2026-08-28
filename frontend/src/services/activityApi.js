@@ -1,133 +1,125 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:8080/api/activities";
+const API_URL =
+  "http://localhost:8080/api/activities";
 
-
-// =====================================================
-// GET ALL ACTIVITIES
-// =====================================================
-
-export const getActivities = async () => {
-  const token = localStorage.getItem("token");
+const getAuthHeaders = () => {
+  const token =
+    localStorage.getItem("token");
 
   if (!token) {
-    throw new Error("No authentication token found.");
+    throw new Error(
+      "No login token found."
+    );
   }
 
-  const response = await axios.get(API_URL, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  return response.data;
+  return {
+    Authorization: `Bearer ${token}`,
+    "Content-Type":
+      "application/json",
+  };
 };
 
 
-// =====================================================
-// CREATE ACTIVITY
-// =====================================================
+// GET
+export const getActivities =
+  async () => {
 
-export const createActivity = async (activity) => {
-  const token = localStorage.getItem("token");
+    const response =
+      await axios.get(
+        API_URL,
+        {
+          headers:
+            getAuthHeaders(),
+        }
+      );
 
-  if (!token) {
-    throw new Error("No authentication token found.");
-  }
+    console.log(
+      "GET ACTIVITIES:",
+      response.data
+    );
 
-  const payload = {
-    category: activity.category,
-    activityType: activity.activityType,
-    quantity: Number(activity.quantity),
-    unit: activity.unit,
-
-    activityDate:
-      activity.activityDate ||
-      new Date().toISOString().split("T")[0],
-
-    metadata:
-      activity.metadata || null,
+    return response.data;
   };
 
-  console.log("Creating activity:", payload);
 
-  const response = await axios.post(
-    API_URL,
-    payload,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    }
-  );
+// CREATE
+export const createActivity =
+  async (activity) => {
 
-  return response.data;
-};
+    const response =
+      await axios.post(
+        API_URL,
+        {
+          category:
+            activity.category,
 
+          activityType:
+            activity.activityType,
 
-// =====================================================
-// UPDATE ACTIVITY
-// =====================================================
+          quantity:
+            Number(activity.quantity),
 
-export const updateActivity = async (id, activity) => {
-  const token = localStorage.getItem("token");
+          unit:
+            activity.unit,
+        },
+        {
+          headers:
+            getAuthHeaders(),
+        }
+      );
 
-  if (!token) {
-    throw new Error("No authentication token found.");
-  }
+    console.log(
+      "CREATED ACTIVITY:",
+      response.data
+    );
 
-  const payload = {
-    category: activity.category,
-    activityType: activity.activityType,
-    quantity: Number(activity.quantity),
-    unit: activity.unit,
-
-    activityDate:
-      activity.activityDate ||
-      new Date().toISOString().split("T")[0],
-
-    metadata:
-      activity.metadata || null,
+    return response.data;
   };
 
-  console.log(
-    `Updating activity ${id}:`,
-    payload
-  );
 
-  const response = await axios.put(
-    `${API_URL}/${id}`,
-    payload,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    }
-  );
+// UPDATE
+export const updateActivity =
+  async (
+    id,
+    activity
+  ) => {
 
-  return response.data;
-};
+    const response =
+      await axios.put(
+        `${API_URL}/${id}`,
+        {
+          category:
+            activity.category,
+
+          activityType:
+            activity.activityType,
+
+          quantity:
+            Number(activity.quantity),
+
+          unit:
+            activity.unit,
+        },
+        {
+          headers:
+            getAuthHeaders(),
+        }
+      );
+
+    return response.data;
+  };
 
 
-// =====================================================
-// DELETE ACTIVITY
-// =====================================================
+// DELETE
+export const deleteActivity =
+  async (id) => {
 
-export const deleteActivity = async (id) => {
-  const token = localStorage.getItem("token");
-
-  if (!token) {
-    throw new Error("No authentication token found.");
-  }
-
-  await axios.delete(
-    `${API_URL}/${id}`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
-};
+    await axios.delete(
+      `${API_URL}/${id}`,
+      {
+        headers:
+          getAuthHeaders(),
+      }
+    );
+  };

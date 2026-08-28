@@ -34,6 +34,7 @@ public class JwtAuthenticationFilter
         String authorizationHeader =
                 request.getHeader("Authorization");
 
+        // No Authorization header
         if (
                 authorizationHeader == null ||
                 !authorizationHeader.startsWith("Bearer ")
@@ -43,26 +44,44 @@ public class JwtAuthenticationFilter
         }
 
         String token =
-                authorizationHeader.substring(7);
+                authorizationHeader.substring(7).trim();
 
         try {
 
-            // Check that token itself is valid
+            // ==========================
+            // VALIDATE TOKEN
+            // ==========================
+
             if (!jwt.isValid(token)) {
+
                 System.out.println(
                         "JWT rejected: invalid or expired token"
                 );
 
-                filterChain.doFilter(request, response);
+                filterChain.doFilter(
+                        request,
+                        response
+                );
+
                 return;
             }
 
-            // Current JwtService stores email in "sub"
+
+            // ==========================
+            // GET EMAIL
+            // ==========================
+
             String email =
                     jwt.extractEmail(token);
 
+
+            // ==========================
+            // CREATE AUTHENTICATION
+            // ==========================
+
             if (
                     email != null &&
+                    !email.isBlank() &&
                     SecurityContextHolder
                             .getContext()
                             .getAuthentication() == null
@@ -87,7 +106,8 @@ public class JwtAuthenticationFilter
                         );
 
                 System.out.println(
-                        "JWT authenticated user: " + email
+                        "JWT authenticated user: "
+                                + email
                 );
             }
 
@@ -99,6 +119,9 @@ public class JwtAuthenticationFilter
             );
         }
 
-        filterChain.doFilter(request, response);
+        filterChain.doFilter(
+                request,
+                response
+        );
     }
 }

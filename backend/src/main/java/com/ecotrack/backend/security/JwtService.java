@@ -1,36 +1,37 @@
 package com.ecotrack.backend.security;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
+import java.nio.charset.StandardCharsets;
+import java.util.Date;
+
+import javax.crypto.SecretKey;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import javax.crypto.SecretKey;
-
-import java.nio.charset.StandardCharsets;
-import java.util.Date;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 
 @Service
 public class JwtService {
 
     private final SecretKey key;
-
     private final long expiration;
-
 
     public JwtService(
             @Value("${jwt.secret}") String secret,
             @Value("${jwt.expiration:86400000}") long expiration
     ) {
 
-        this.key =
-                Keys.hmacShaKeyFor(
-                        secret.getBytes(
-                                StandardCharsets.UTF_8
-                        )
-                );
+        if (secret == null || secret.length() < 32) {
+            throw new IllegalArgumentException(
+                    "JWT secret must be at least 32 characters long"
+            );
+        }
+
+        this.key = Keys.hmacShaKeyFor(
+                secret.getBytes(StandardCharsets.UTF_8)
+        );
 
         this.expiration = expiration;
     }
@@ -45,31 +46,18 @@ public class JwtService {
             String email
     ) {
 
-        Date now =
-                new Date();
+        Date now = new Date();
 
-        Date expiry =
-                new Date(
-                        now.getTime()
-                                + expiration
-                );
-
+        Date expiry = new Date(
+                now.getTime() + expiration
+        );
 
         return Jwts.builder()
-
                 .subject(email)
-
-                .claim(
-                        "userId",
-                        userId
-                )
-
+                .claim("userId", userId)
                 .issuedAt(now)
-
                 .expiration(expiry)
-
                 .signWith(key)
-
                 .compact();
     }
 
@@ -78,9 +66,7 @@ public class JwtService {
     // EXTRACT EMAIL
     // ==========================================
 
-    public String extractEmail(
-            String token
-    ) {
+    public String extractEmail(String token) {
 
         return getClaims(token)
                 .getSubject();
@@ -91,9 +77,7 @@ public class JwtService {
     // EXTRACT USER ID
     // ==========================================
 
-    public Long extractUserId(
-            String token
-    ) {
+    public Long extractUserId(String token) {
 
         return getClaims(token)
                 .get("userId", Long.class);
@@ -101,12 +85,10 @@ public class JwtService {
 
 
     // ==========================================
-    // CHECK TOKEN
+    // VALIDATE TOKEN
     // ==========================================
 
-    public boolean isValid(
-            String token
-    ) {
+    public boolean isValid(String token) {
 
         try {
 
@@ -116,13 +98,18 @@ public class JwtService {
 
         } catch (Exception e) {
 
+            System.out.println(
+                    "JWT validation error: "
+                            + e.getMessage()
+            );
+
             return false;
         }
     }
 
 
     // ==========================================
-    // CHECK TOKEN + EMAIL
+    // VALIDATE TOKEN + EMAIL
     // ==========================================
 
     public boolean valid(
@@ -136,7 +123,7 @@ public class JwtService {
                     extractEmail(token);
 
             return tokenEmail != null
-                    && tokenEmail.equals(email)
+                    && tokenEmail.equalsIgnoreCase(email)
                     && isValid(token);
 
         } catch (Exception e) {
@@ -147,21 +134,15 @@ public class JwtService {
 
 
     // ==========================================
-    // PARSE TOKEN
+    // PARSE JWT
     // ==========================================
 
-    private Claims getClaims(
-            String token
-    ) {
+    private Claims getClaims(String token) {
 
         return Jwts.parser()
-
                 .verifyWith(key)
-
                 .build()
-
                 .parseSignedClaims(token)
-
                 .getPayload();
     }
 }

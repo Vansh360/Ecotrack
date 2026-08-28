@@ -1,7 +1,7 @@
+import { useEffect, useMemo, useState } from "react";
 import {
   Activity,
   ArrowDownRight,
-  ArrowUpRight,
   BarChart3,
   Car,
   Droplets,
@@ -25,101 +25,342 @@ import {
   Cell,
 } from "recharts";
 
-import useDashboard from "../../hooks/useDashboard";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useMemo, useState } from "react";
 import { getActivities } from "../../services/activityService";
+
+
+// ==========================================
+// CATEGORY ICONS
+// ==========================================
+
+const categoryIcons = {
+  TRANSPORTATION: Car,
+  ELECTRICITY: Zap,
+  FOOD: Utensils,
+  WASTE: Recycle,
+  WATER: Droplets,
+};
+
+
+// ==========================================
+// CATEGORY NAMES
+// ==========================================
+
+const categoryNames = {
+  TRANSPORTATION: "Transportation",
+  ELECTRICITY: "Electricity",
+  FOOD: "Food",
+  WASTE: "Waste",
+  WATER: "Water",
+};
+
+
+// ==========================================
+// CATEGORY ICON HELPER
+// ==========================================
+
+function getCategoryIcon(category) {
+  const normalized = String(
+    category || ""
+  )
+    .trim()
+    .toUpperCase();
+
+  return categoryIcons[normalized] || Leaf;
+}
+
+
+// ==========================================
+// DASHBOARD
+// ==========================================
 
 export default function Dashboard() {
 
   const navigate = useNavigate();
 
-  const [activities, setActivities] = useState([]);
-  const [loadingActivities, setLoadingActivities] = useState(true);
-  const [activityError, setActivityError] = useState("");
+  const [activities, setActivities] =
+    useState([]);
 
-  const loadActivities = async () => {
-    try {
-      setLoadingActivities(true);
-      setActivityError("");
+  const [loading, setLoading] =
+    useState(true);
 
-      const result = await getActivities();
+  const [error, setError] =
+    useState("");
 
-      console.log("Activities received:", result);
 
-      setActivities(Array.isArray(result) ? result : []);
-    } catch (error) {
-      console.error("Activity loading error:", error);
-      setActivityError(error.message);
-    } finally {
-      setLoadingActivities(false);
-    }
-  };
+  // ==========================================
+  // LOAD ACTIVITIES
+  // ==========================================
 
   useEffect(() => {
+
     loadActivities();
+
   }, []);
 
-  const totalEmission = useMemo(() => {
-    return activities.reduce(
-      (total, activity) =>
-        total + Number(activity.emission || 0),
-      0
+
+  async function loadActivities() {
+
+    try {
+
+      setLoading(true);
+      setError("");
+
+      const result =
+        await getActivities();
+
+      console.log(
+        "Dashboard activities:",
+        result
+      );
+
+      setActivities(
+        Array.isArray(result)
+          ? result
+          : []
+      );
+
+    } catch (err) {
+
+      console.error(
+        "Dashboard activity error:",
+        err
+      );
+
+      if (
+        err?.status === 401 ||
+        err?.status === 403
+      ) {
+
+        setError(
+          "Your session has expired. Please login again."
+        );
+
+      } else {
+
+        setError(
+          err.message ||
+          "Unable to load activities."
+        );
+      }
+
+    } finally {
+
+      setLoading(false);
+
+    }
+  }
+
+
+  // ==========================================
+  // TOTAL EMISSION
+  // ==========================================
+
+  const totalEmission =
+    useMemo(() => {
+
+      return activities.reduce(
+        (total, activity) =>
+          total +
+          Number(
+            activity.emission || 0
+          ),
+        0
+      );
+
+    }, [activities]);
+
+
+  // ==========================================
+  // CATEGORY BREAKDOWN
+  // ==========================================
+
+  const categoryBreakdown =
+    useMemo(() => {
+
+      const result = {};
+
+      activities.forEach(
+        (activity) => {
+
+          const category =
+            String(
+              activity.category ||
+              "OTHER"
+            )
+              .trim()
+              .toUpperCase();
+
+          const emission =
+            Number(
+              activity.emission || 0
+            );
+
+          result[category] =
+            (result[category] || 0) +
+            emission;
+        }
+      );
+
+      const total =
+        Object.values(result).reduce(
+          (sum, value) =>
+            sum + value,
+          0
+        );
+
+      return Object.entries(result)
+        .map(
+          ([category, emission]) => ({
+            category,
+            emission,
+            percentage: total
+              ? Math.round(
+                  (emission / total) *
+                    100
+                )
+              : 0,
+          })
+        );
+
+    }, [activities]);
+
+
+  // ==========================================
+  // MONTHLY EMISSIONS
+  // ==========================================
+
+  const monthlyEmissions =
+    useMemo(() => {
+
+      const result = {};
+
+      activities.forEach(
+        (activity) => {
+
+          const date =
+            activity.activityDate ||
+            activity.date ||
+            activity.createdAt;
+
+          if (!date) {
+            return;
+          }
+
+          const parsed =
+            new Date(date);
+
+          if (
+            Number.isNaN(
+              parsed.getTime()
+            )
+          ) {
+            return;
+          }
+
+          const month =
+            parsed.toLocaleDateString(
+              "en-US",
+              {
+                month: "short",
+                year: "numeric",
+              }
+            );
+
+          result[month] =
+            (result[month] || 0) +
+            Number(
+              activity.emission || 0
+            );
+        }
+      );
+
+      return Object.entries(result)
+        .map(
+          ([month, emission]) => ({
+            month,
+            emission: Number(
+              emission.toFixed(2)
+            ),
+          })
+        );
+
+    }, [activities]);
+
+
+  // ==========================================
+  // SCORE
+  // ==========================================
+
+  const sustainabilityScore =
+    activities.length === 0
+      ? 100
+      : Math.max(
+          0,
+          Math.min(
+            100,
+            Math.round(
+              100 -
+                totalEmission * 5
+            )
+          )
+        );
+
+
+  // ==========================================
+  // LOADING
+  // ==========================================
+
+  if (loading) {
+
+    return (
+      <div className="dashboard-loading">
+        Loading your EcoTrack data...
+      </div>
     );
-  }, [activities]);
 
-  const categoryEmissions = useMemo(() => {
-    const result = {};
-
-    activities.forEach((activity) => {
-      const category = activity.category || "Other";
-
-      result[category] =
-        (result[category] || 0) + Number(activity.emission || 0);
-    });
-
-    return result;
-  }, [activities]);
-
-  const { data, loading, error } = useDashboard();
-  const currentEmission = totalEmission;
-  const co2Reduced = data?.co2Reduced ?? 0;
-  const sustainabilityScore = data?.sustainabilityScore ?? 0;
-  const goalProgress = data?.goalProgress ?? 0;
-  const monthlyEmissions = data?.monthlyEmissions ?? [];
-  const categoryBreakdown = Object.entries(categoryEmissions).map(
-    ([category, emission]) => ({ category, emission, percentage: 0 })
-  );
-  const totalCategoryEmission = categoryBreakdown.reduce(
-    (total, item) => total + item.emission,
-    0
-  );
-  const normalizedCategoryBreakdown = categoryBreakdown.map((item) => ({
-    ...item,
-    percentage: totalCategoryEmission
-      ? Math.round((item.emission / totalCategoryEmission) * 100)
-      : 0,
-  }));
-  const displayCategoryBreakdown = normalizedCategoryBreakdown;
-  const activityCount = activities.length;
-  const co2Change = { direction: "same", percentage: 0 };
+  }
 
 
-  const categoryIcons = {
-    Transportation: Car,
-    Electricity: Zap,
-    Food: Utensils,
-    Waste: Recycle,
-    Water: Droplets,
-  };
+  // ==========================================
+  // ERROR
+  // ==========================================
 
+  if (error) {
+
+    return (
+      <div className="dashboard-error">
+
+        <h2>
+          Unable to load dashboard
+        </h2>
+
+        <p>
+          {error}
+        </p>
+
+        <button
+          onClick={loadActivities}
+        >
+          Try Again
+        </button>
+
+      </div>
+    );
+
+  }
+
+
+  // ==========================================
+  // PAGE
+  // ==========================================
 
   return (
+
     <div className="dashboard-page">
 
-      {/* ===================================
-          HEADER
-      =================================== */}
+
+      {/* HEADER */}
 
       <div className="dashboard-heading">
 
@@ -138,15 +379,14 @@ export default function Dashboard() {
             and improve your sustainability.
           </p>
 
-          {(loading || loadingActivities) && <p>Loading dashboard data...</p>}
-          {error && <p>{error}</p>}
-          {activityError && <p>{activityError}</p>}
-
         </div>
+
 
         <button
           className="add-activity-button"
-          onClick={() => navigate("/activity/add")}
+          onClick={() =>
+            navigate("/activity/add")
+          }
         >
           + Add Activity
         </button>
@@ -173,25 +413,18 @@ export default function Dashboard() {
       </div>
 
 
-      {/* ===================================
-          MAIN METRIC CARDS
-      =================================== */}
+      {/* METRICS */}
 
       <div className="dashboard-metrics">
-
-
-        {/* CARBON FOOTPRINT */}
 
         <MetricCard
           icon={<Leaf size={19} />}
           title="Carbon Footprint"
-          value={currentEmission.toFixed(2)}
+          value={totalEmission.toFixed(2)}
           unit="kg CO₂e"
           description="This month"
         />
 
-
-        {/* SUSTAINABILITY SCORE */}
 
         <MetricCard
           icon={<Target size={19} />}
@@ -202,82 +435,27 @@ export default function Dashboard() {
         />
 
 
-        {/* CO2 REDUCED */}
-
         <MetricCard
-          icon={<ArrowDownRight size={19} />}
-          title="CO₂ Reduced"
-          value={co2Reduced.toFixed(2)}
-          unit="kg"
-          description={
-            co2Change.direction ===
-            "down"
-              ? `${co2Change.percentage}% lower than last month`
-              : "Compared with last month"
-          }
+          icon={<Activity size={19} />}
+          title="Total Activities"
+          value={activities.length}
+          unit="records"
+          description="Recorded activities"
         />
 
 
-        {/* GOAL */}
-
         <MetricCard
           icon={<Target size={19} />}
-          title="Current Goal"
-          value={goalProgress}
-          unit="%"
-          description="Goal progress"
+          title="CO₂ Reduced"
+          value="0.00"
+          unit="kg"
+          description="Compared with last month"
         />
 
       </div>
 
 
-      {/* ===================================
-          CHANGE INDICATOR
-      =================================== */}
-
-      {activityCount > 0 && (
-        <div
-          className={`dashboard-change ${
-            co2Change.direction
-          }`}
-        >
-
-          {co2Change.direction ===
-            "down" ? (
-            <ArrowDownRight
-              size={17}
-            />
-          ) : co2Change.direction ===
-            "up" ? (
-            <ArrowUpRight
-              size={17}
-            />
-          ) : (
-            <Activity
-              size={17}
-            />
-          )}
-
-
-          <span>
-
-            {co2Change.direction ===
-              "down"
-              ? `Your emissions are ${co2Change.percentage}% lower than last month.`
-              : co2Change.direction ===
-                "up"
-              ? `Your emissions are ${co2Change.percentage}% higher than last month.`
-              : "No previous-month comparison available yet."}
-
-          </span>
-
-        </div>
-      )}
-
-
-      {/* ===================================
-          CHART SECTION
-      =================================== */}
+      {/* EMISSIONS BY CATEGORY */}
 
       <div className="dashboard-chart-grid">
 
@@ -305,65 +483,81 @@ export default function Dashboard() {
 
           <div className="chart-container">
 
-            <ResponsiveContainer
-              width="100%"
-              height="100%"
-            >
+            {monthlyEmissions.length > 0 ? (
 
-              <LineChart
-                data={
-                  monthlyEmissions
-                }
+              <ResponsiveContainer
+                width="100%"
+                height="100%"
               >
 
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  vertical={false}
-                />
+                <LineChart
+                  data={
+                    monthlyEmissions
+                  }
+                >
 
-                <XAxis
-                  dataKey="month"
-                  tick={{
-                    fontSize: 11,
-                  }}
-                />
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    vertical={false}
+                  />
 
-                <YAxis
-                  tick={{
-                    fontSize: 11,
-                  }}
-                />
+                  <XAxis
+                    dataKey="month"
+                    tick={{
+                      fontSize: 11,
+                    }}
+                  />
 
-                <Tooltip
-                  formatter={(value) => [
-                    `${value} kg CO₂e`,
-                    "Emission",
-                  ]}
-                />
+                  <YAxis
+                    tick={{
+                      fontSize: 11,
+                    }}
+                  />
 
-                <Line
-                  type="monotone"
-                  dataKey="emission"
-                  stroke="#1f7a4d"
-                  strokeWidth={3}
-                  dot={{
-                    r: 4,
-                  }}
-                  activeDot={{
-                    r: 6,
-                  }}
-                />
+                  <Tooltip
+                    formatter={(value) => [
+                      `${value} kg CO₂e`,
+                      "Emission",
+                    ]}
+                  />
 
-              </LineChart>
+                  <Line
+                    type="monotone"
+                    dataKey="emission"
+                    stroke="#1f7a4d"
+                    strokeWidth={3}
+                    dot={{
+                      r: 4,
+                    }}
+                    activeDot={{
+                      r: 6,
+                    }}
+                  />
 
-            </ResponsiveContainer>
+                </LineChart>
+
+              </ResponsiveContainer>
+
+            ) : (
+
+              <div className="empty-chart">
+
+                <BarChart3 size={32} />
+
+                <span>
+                  No activity data yet
+                </span>
+
+              </div>
+
+            )}
 
           </div>
 
         </div>
 
 
-        {/* CATEGORY PIE CHART */}
+        {/* PIE CHART */}
 
         <div className="dashboard-panel">
 
@@ -386,7 +580,7 @@ export default function Dashboard() {
 
           <div className="pie-chart-container">
 
-            {displayCategoryBreakdown.some(
+            {categoryBreakdown.some(
               (item) =>
                 item.emission > 0
             ) ? (
@@ -399,13 +593,10 @@ export default function Dashboard() {
                 <PieChart>
 
                   <Pie
-                    data={
-                      displayCategoryBreakdown.filter(
-                        (item) =>
-                          item.emission >
-                          0
-                      )
-                    }
+                    data={categoryBreakdown.filter(
+                      (item) =>
+                        item.emission > 0
+                    )}
                     dataKey="emission"
                     nameKey="category"
                     cx="50%"
@@ -414,11 +605,10 @@ export default function Dashboard() {
                     innerRadius={55}
                   >
 
-                    {displayCategoryBreakdown
+                    {categoryBreakdown
                       .filter(
                         (item) =>
-                          item.emission >
-                          0
+                          item.emission > 0
                       )
                       .map(
                         (
@@ -438,8 +628,7 @@ export default function Dashboard() {
                                 "#a8d5ba",
                                 "#d7eadf",
                               ][
-                                index %
-                                  5
+                                index % 5
                               ]
                             }
                           />
@@ -449,14 +638,7 @@ export default function Dashboard() {
 
                   </Pie>
 
-                  <Tooltip
-                    formatter={(
-                      value
-                    ) => [
-                      `${value} kg`,
-                      "CO₂e",
-                    ]}
-                  />
+                  <Tooltip />
 
                 </PieChart>
 
@@ -485,15 +667,16 @@ export default function Dashboard() {
 
           <div className="category-list">
 
-            {displayCategoryBreakdown.map(
+            {categoryBreakdown.map(
               (item) => {
 
                 const Icon =
-                  categoryIcons[
+                  getCategoryIcon(
                     item.category
-                  ];
+                  );
 
                 return (
+
                   <div
                     className="category-row"
                     key={
@@ -503,12 +686,13 @@ export default function Dashboard() {
 
                     <div className="category-name">
 
-                      <Icon
-                        size={15}
-                      />
+                      <Icon size={15} />
 
                       <span>
                         {
+                          categoryNames[
+                            item.category
+                          ] ||
                           item.category
                         }
                       </span>
@@ -519,11 +703,9 @@ export default function Dashboard() {
                     <div>
 
                       <strong>
-                        {
-                          item.emission.toFixed(
-                            2
-                          )
-                        } kg
+                        {item.emission.toFixed(
+                          2
+                        )} kg
                       </strong>
 
                       <span>
@@ -531,13 +713,13 @@ export default function Dashboard() {
                         (
                         {
                           item.percentage
-                        }
-                        %)
+                        }%)
                       </span>
 
                     </div>
 
                   </div>
+
                 );
 
               }
@@ -550,9 +732,7 @@ export default function Dashboard() {
       </div>
 
 
-      {/* ===================================
-          CATEGORY CARDS
-      =================================== */}
+      {/* CATEGORY CARDS */}
 
       <div className="dashboard-section-title">
 
@@ -573,21 +753,19 @@ export default function Dashboard() {
 
       <div className="category-cards">
 
-        {displayCategoryBreakdown.map(
+        {categoryBreakdown.map(
           (item) => {
 
             const Icon =
-              categoryIcons[
+              getCategoryIcon(
                 item.category
-              ];
+              );
 
             return (
 
               <div
                 className="category-card"
-                key={
-                  item.category
-                }
+                key={item.category}
               >
 
                 <div className="category-card-icon">
@@ -597,15 +775,18 @@ export default function Dashboard() {
                 </div>
 
                 <span>
-                  {item.category}
+                  {
+                    categoryNames[
+                      item.category
+                    ] ||
+                    item.category
+                  }
                 </span>
 
                 <strong>
-                  {
-                    item.emission.toFixed(
-                      2
-                    )
-                  } kg
+                  {item.emission.toFixed(
+                    2
+                  )} kg
                 </strong>
 
                 <small>
@@ -623,9 +804,7 @@ export default function Dashboard() {
       </div>
 
 
-      {/* ===================================
-          RECENT ACTIVITIES
-      =================================== */}
+      {/* RECENT ACTIVITIES */}
 
       {activities.length > 0 && (
 
@@ -654,9 +833,9 @@ export default function Dashboard() {
               (activity) => {
 
                 const Icon =
-                  categoryIcons[
+                  getCategoryIcon(
                     activity.category
-                  ] || Leaf;
+                  );
 
                 return (
 
@@ -666,23 +845,41 @@ export default function Dashboard() {
                   >
 
                     <div className="activity-icon">
+
                       <Icon size={20} />
+
                     </div>
 
 
                     <div className="activity-info">
 
                       <strong>
-                        {activity.activityType ||
-                          activity.category}
+                        {
+                          activity.activityType ||
+                          activity.category
+                        }
                       </strong>
 
                       <span>
-                        {activity.category}
+
+                        {
+                          categoryNames[
+                            String(
+                              activity.category ||
+                              ""
+                            ).toUpperCase()
+                          ] ||
+                          activity.category
+                        }
+
                         {" • "}
+
                         {activity.quantity}
+
                         {" "}
+
                         {activity.unit}
+
                       </span>
 
                     </div>
@@ -691,11 +888,14 @@ export default function Dashboard() {
                     <div className="activity-emission">
 
                       <strong>
+
                         {Number(
-                          activity.emission || 0
+                          activity.emission ||
+                          0
                         ).toFixed(2)}
-                        {" "}
-                        kg
+
+                        {" "}kg
+
                       </strong>
 
                       <span>
@@ -707,6 +907,7 @@ export default function Dashboard() {
                   </div>
 
                 );
+
               }
             )}
 
@@ -717,11 +918,9 @@ export default function Dashboard() {
       )}
 
 
-      {/* ===================================
-          EMPTY STATE
-      =================================== */}
+      {/* EMPTY */}
 
-      {!loadingActivities && activities.length === 0 && (
+      {activities.length === 0 && (
 
         <div className="dashboard-empty">
 
@@ -732,10 +931,9 @@ export default function Dashboard() {
           </h3>
 
           <p>
-            Add transportation,
-            electricity, food, waste or
-            water activities to see your
-            real carbon footprint.
+            Add transportation, electricity,
+            food, waste or water activities
+            to see your real carbon footprint.
           </p>
 
         </div>
@@ -747,9 +945,9 @@ export default function Dashboard() {
 }
 
 
-/* =========================================
-   METRIC CARD
-========================================= */
+// ==========================================
+// METRIC CARD
+// ==========================================
 
 function MetricCard({
   icon,
@@ -788,5 +986,6 @@ function MetricCard({
       </small>
 
     </div>
+
   );
 }
