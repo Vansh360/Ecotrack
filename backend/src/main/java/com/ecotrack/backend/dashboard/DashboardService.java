@@ -1,12 +1,5 @@
 package com.ecotrack.backend.dashboard;
 
-import com.ecotrack.backend.activity.ActivityRepository;
-import com.ecotrack.backend.entity.Activity;
-import com.ecotrack.backend.user.User;
-import com.ecotrack.backend.user.UserRepository;
-
-import org.springframework.stereotype.Service;
-
 import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -14,45 +7,42 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.springframework.stereotype.Service;
+
+import com.ecotrack.backend.activity.ActivityRepository;
+import com.ecotrack.backend.entity.Activity;
+import com.ecotrack.backend.user.User;
+import com.ecotrack.backend.user.UserRepository;
+
 @Service
 public class DashboardService {
 
     private final ActivityRepository activityRepository;
-
     private final UserRepository userRepository;
-
 
     public DashboardService(
             ActivityRepository activityRepository,
             UserRepository userRepository
     ) {
-
-        this.activityRepository =
-                activityRepository;
-
-        this.userRepository =
-                userRepository;
+        this.activityRepository = activityRepository;
+        this.userRepository = userRepository;
     }
 
+    public DashboardResponse getDashboard(String email) {
 
-    public DashboardResponse getDashboard(
-            String email
-    ) {
+        User user = userRepository
+                .findByEmail(email)
+                .orElseThrow(
+                        () -> new RuntimeException("User not found")
+                );
 
-        User user =
-                userRepository
-                        .findByEmail(email)
-                        .orElseThrow(
-                                () ->
-                                        new RuntimeException(
-                                                "User not found"
-                                        )
-                        );
-
+        // =========================================
+        // GET USER ACTIVITIES
+        // =========================================
 
         List<Activity> activities =
                 activityRepository
-                        .findByUserOrderByDateDesc(user);
+                        .findByUserOrderByActivityDateDesc(user);
 
 
         // =========================================
@@ -63,7 +53,9 @@ public class DashboardService {
                 activities
                         .stream()
                         .mapToDouble(
-                                Activity::getEmission
+                                activity -> activity.getEmission() == null
+                                        ? 0.0
+                                        : activity.getEmission()
                         )
                         .sum();
 
@@ -72,19 +64,21 @@ public class DashboardService {
         // CATEGORY-WISE EMISSIONS
         // =========================================
 
-        Map<String, Double>
-                categoryEmissions =
+        Map<String, Double> categoryEmissions =
                 new LinkedHashMap<>();
-
 
         for (Activity activity : activities) {
 
-            String category =
-                    activity.getCategory();
+            String category = activity.getCategory();
+
+            if (category == null) {
+                category = "OTHER";
+            }
 
             double emission =
-                    activity.getEmission();
-
+                    activity.getEmission() == null
+                            ? 0.0
+                            : activity.getEmission();
 
             categoryEmissions.put(
                     category,
@@ -100,43 +94,41 @@ public class DashboardService {
         // MONTHLY EMISSIONS
         // =========================================
 
-        Map<YearMonth, Double>
-                monthlyMap =
+        Map<YearMonth, Double> monthlyMap =
                 new TreeMap<>();
-
 
         for (Activity activity : activities) {
 
-            if (activity.getDate() == null) {
+            if (activity.getActivityDate() == null) {
                 continue;
             }
 
-
             YearMonth month =
                     YearMonth.from(
-                            activity.getDate()
+                            activity.getActivityDate()
                     );
 
+            double emission =
+                    activity.getEmission() == null
+                            ? 0.0
+                            : activity.getEmission();
 
             monthlyMap.put(
                     month,
                     monthlyMap.getOrDefault(
                             month,
                             0.0
-                    ) + activity.getEmission()
+                    ) + emission
             );
         }
 
 
-        List<MonthlyEmission>
-                monthlyEmissions =
+        List<MonthlyEmission> monthlyEmissions =
                 new ArrayList<>();
 
-
         for (
-                Map.Entry<YearMonth, Double>
-                        entry :
-                        monthlyMap.entrySet()
+                Map.Entry<YearMonth, Double> entry
+                        : monthlyMap.entrySet()
         ) {
 
             monthlyEmissions.add(
@@ -153,9 +145,7 @@ public class DashboardService {
         // =========================================
 
         double sustainabilityScore =
-                calculateScore(
-                        totalEmission
-                );
+                calculateScore(totalEmission);
 
 
         // =========================================
@@ -163,9 +153,7 @@ public class DashboardService {
         // =========================================
 
         double co2Reduced =
-                calculateCo2Reduced(
-                        totalEmission
-                );
+                calculateCo2Reduced(totalEmission);
 
 
         // =========================================
@@ -173,10 +161,12 @@ public class DashboardService {
         // =========================================
 
         double goalProgress =
-                calculateGoalProgress(
-                        totalEmission
-                );
+                calculateGoalProgress(totalEmission);
 
+
+        // =========================================
+        // RESPONSE
+        // =========================================
 
         return new DashboardResponse(
                 round(totalEmission),
@@ -193,9 +183,7 @@ public class DashboardService {
     // SUSTAINABILITY SCORE
     // =========================================
 
-    private double calculateScore(
-            double emission
-    ) {
+    private double calculateScore(double emission) {
 
         if (emission <= 100) {
             return 95;
@@ -225,9 +213,7 @@ public class DashboardService {
     // CO2 REDUCED
     // =========================================
 
-    private double calculateCo2Reduced(
-            double emission
-    ) {
+    private double calculateCo2Reduced(double emission) {
 
         double baseline = 500;
 
@@ -242,28 +228,21 @@ public class DashboardService {
     // GOAL PROGRESS
     // =========================================
 
-    private double calculateGoalProgress(
-            double emission
-    ) {
+    private double calculateGoalProgress(double emission) {
 
         double target = 250;
-
         double baseline = 500;
-
 
         if (emission <= target) {
             return 100;
         }
-
 
         double progress =
                 (
                         (baseline - emission)
                                 /
                         (baseline - target)
-                )
-                        * 100;
-
+                ) * 100;
 
         return Math.max(
                 0,
@@ -275,9 +254,11 @@ public class DashboardService {
     }
 
 
-    private double round(
-            double value
-    ) {
+    // =========================================
+    // ROUND
+    // =========================================
+
+    private double round(double value) {
 
         return Math.round(
                 value * 100

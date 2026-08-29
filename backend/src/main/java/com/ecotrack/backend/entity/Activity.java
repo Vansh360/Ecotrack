@@ -273,17 +273,42 @@ public class Activity {
     // ACTIVITY DATE
     // =========================
 
-    public LocalDateTime getActivityDate() {
-        return activityDate;
-    }
+    // public LocalDateTime getActivityDate() {
+    //     return activityDate;
+    // }
 
-    public void setActivityDate(
-        LocalDateTime activityDate
-    ) {
-        this.activityDate = activityDate;
-    }
+    // public void setActivityDate(
+    //     LocalDateTime activityDate
+    // ) {
+    //     this.activityDate = activityDate;
+    // }
 
+// =========================
+// ACTIVITY DATE
+// =========================
 
+public LocalDateTime getActivityDate() {
+    return activityDate;
+}
+
+public void setActivityDate(
+    LocalDateTime activityDate
+) {
+    this.activityDate = activityDate;
+}
+
+// Compatibility methods
+// Used by ActivityService and DashboardService
+
+public LocalDateTime getDate() {
+    return activityDate;
+}
+
+public void setDate(
+    LocalDateTime date
+) {
+    this.activityDate = date;
+}
     // =========================
     // CREATED DATE
     // =========================
@@ -297,4 +322,8 @@ public class Activity {
     ) {
         this.createdAt = createdAt;
     }
+
+
+
+    
 }

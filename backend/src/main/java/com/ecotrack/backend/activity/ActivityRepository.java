@@ -19,15 +19,15 @@ public interface ActivityRepository
     // BASIC ACTIVITY QUERIES
     // =====================================================
 
-    List<Activity> findAllByOrderByDateDesc();
+    List<Activity> findAllByOrderByActivityDateDesc();
 
 
-    List<Activity> findByUserOrderByDateDesc(
+    List<Activity> findByUserOrderByActivityDateDesc(
             User user
     );
 
 
-    List<Activity> findByUserAndDateBetween(
+    List<Activity> findByUserAndActivityDateBetween(
             User user,
             LocalDateTime start,
             LocalDateTime end
@@ -48,8 +48,8 @@ public interface ActivityRepository
         SELECT COALESCE(SUM(a.emission), 0)
         FROM Activity a
         WHERE a.user.id = :userId
-        AND a.date >= :start
-        AND a.date < :end
+        AND a.activityDate >= :start
+        AND a.activityDate < :end
     """)
     Double totalBetween(
             @Param("userId") Long userId,
@@ -64,8 +64,7 @@ public interface ActivityRepository
      * total(userId, startDate, endDate)
      *
      * These default methods convert LocalDate
-     * into the LocalDateTime values required
-     * by the database query.
+     * into LocalDateTime values.
      */
 
     default Double total(
@@ -87,11 +86,12 @@ public interface ActivityRepository
     // =====================================================
 
     @Query("""
-        SELECT a.category, COALESCE(SUM(a.emission), 0)
+        SELECT a.category,
+               COALESCE(SUM(a.emission), 0)
         FROM Activity a
         WHERE a.user.id = :userId
-        AND a.date >= :start
-        AND a.date < :end
+        AND a.activityDate >= :start
+        AND a.activityDate < :end
         GROUP BY a.category
         ORDER BY SUM(a.emission) DESC
     """)
@@ -121,14 +121,14 @@ public interface ActivityRepository
     // =====================================================
 
     @Query("""
-        SELECT FUNCTION('DATE', a.date),
+        SELECT FUNCTION('DATE', a.activityDate),
                COALESCE(SUM(a.emission), 0)
         FROM Activity a
         WHERE a.user.id = :userId
-        AND a.date >= :start
-        AND a.date < :end
-        GROUP BY FUNCTION('DATE', a.date)
-        ORDER BY FUNCTION('DATE', a.date)
+        AND a.activityDate >= :start
+        AND a.activityDate < :end
+        GROUP BY FUNCTION('DATE', a.activityDate)
+        ORDER BY FUNCTION('DATE', a.activityDate)
     """)
     List<Object[]> dailyBetween(
             @Param("userId") Long userId,
