@@ -1,479 +1,1282 @@
-package com.ecotrack.backend.activity;
+import React, { useEffect, useMemo, useState } from "react";
+import { useActivities } from "../context/ActivityContext";
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.util.List;
+export default function ActivityHistory() {
 
-import org.springframework.stereotype.Service;
+  // =====================================================
+  // ACTIVITY CONTEXT
+  // =====================================================
 
-import com.ecotrack.backend.emission.EmissionFactorRepository;
-import com.ecotrack.backend.entity.Activity;
-import com.ecotrack.backend.user.User;
-import com.ecotrack.backend.user.UserRepository;
+  const {
+    activities,
+    loading,
+    error,
+    updateActivity,
+    deleteActivity,
+    refreshActivities,
+  } = useActivities();
 
-@Service
-public class ActivityService {
 
-    private final ActivityRepository repository;
-    private final UserRepository userRepository;
-    private final EmissionFactorRepository emissionFactorRepository;
+  // =====================================================
+  // STATE
+  // =====================================================
 
-    public ActivityService(
-            ActivityRepository repository,
-            UserRepository userRepository,
-            EmissionFactorRepository emissionFactorRepository
+  const [search, setSearch] = useState("");
+
+  const [categoryFilter, setCategoryFilter] =
+    useState("ALL");
+
+  const [dateFilter, setDateFilter] =
+    useState("ALL");
+
+  const [deletingId, setDeletingId] =
+    useState(null);
+
+  const [editingId, setEditingId] =
+    useState(null);
+
+  const [editData, setEditData] =
+    useState({
+      category: "",
+      activityType: "",
+      quantity: "",
+      unit: "",
+      activityDate: "",
+    });
+
+
+  // =====================================================
+  // REFRESH
+  // =====================================================
+
+  useEffect(() => {
+
+    if (
+      !activities ||
+      activities.length === 0
     ) {
-        this.repository = repository;
-        this.userRepository = userRepository;
-        this.emissionFactorRepository = emissionFactorRepository;
+      refreshActivities();
     }
 
-    // =====================================================
-    // GET ALL ACTIVITIES FOR CURRENT USER
-    // =====================================================
+  }, []);
 
-    public List<ActivityDtos.ActivityResponse> getAllActivityResponses(
-            String email
+
+  // =====================================================
+  // FORMAT DATE
+  // =====================================================
+
+  const formatDate = (date) => {
+
+    if (!date) {
+      return "Unknown";
+    }
+
+    try {
+
+      return new Date(date).toLocaleDateString(
+        "en-IN",
+        {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        }
+      );
+
+    } catch (err) {
+
+      return "Unknown";
+    }
+  };
+
+
+  // =====================================================
+  // NORMALIZE DATE FOR COMPARISON
+  // =====================================================
+
+  const getDateOnly = (date) => {
+
+    if (!date) {
+      return "";
+    }
+
+    return String(date).substring(0, 10);
+  };
+
+
+  // =====================================================
+  // FILTER ACTIVITIES
+  // =====================================================
+
+  const filteredActivities = useMemo(() => {
+
+    if (!Array.isArray(activities)) {
+      return [];
+    }
+
+    return activities.filter(
+      (activity) => {
+
+        // -----------------------------
+        // SEARCH
+        // -----------------------------
+
+        const searchText =
+          search.trim().toLowerCase();
+
+        const matchesSearch =
+          searchText === "" ||
+          String(
+            activity.category || ""
+          )
+            .toLowerCase()
+            .includes(searchText) ||
+          String(
+            activity.activityType || ""
+          )
+            .toLowerCase()
+            .includes(searchText) ||
+          String(
+            activity.unit || ""
+          )
+            .toLowerCase()
+            .includes(searchText);
+
+
+        // -----------------------------
+        // CATEGORY
+        // -----------------------------
+
+        const matchesCategory =
+          categoryFilter === "ALL" ||
+          String(
+            activity.category || ""
+          ).toUpperCase() ===
+            categoryFilter;
+
+
+        // -----------------------------
+        // DATE
+        // -----------------------------
+
+        const activityDate =
+          getDateOnly(
+            activity.activityDate
+          );
+
+        const today =
+          new Date();
+
+        const todayString =
+          today.toISOString().substring(0, 10);
+
+        const yesterday =
+          new Date();
+
+        yesterday.setDate(
+          yesterday.getDate() - 1
+        );
+
+        const yesterdayString =
+          yesterday
+            .toISOString()
+            .substring(0, 10);
+
+
+        let matchesDate = true;
+
+
+        if (dateFilter === "TODAY") {
+
+          matchesDate =
+            activityDate ===
+            todayString;
+
+        }
+
+
+        if (dateFilter === "YESTERDAY") {
+
+          matchesDate =
+            activityDate ===
+            yesterdayString;
+
+        }
+
+
+        if (dateFilter === "THIS_MONTH") {
+
+          if (!activityDate) {
+
+            matchesDate = false;
+
+          } else {
+
+            const activityDateObject =
+              new Date(activityDate);
+
+            const currentDate =
+              new Date();
+
+            matchesDate =
+              activityDateObject.getMonth() ===
+                currentDate.getMonth() &&
+              activityDateObject.getFullYear() ===
+                currentDate.getFullYear();
+          }
+        }
+
+
+        return (
+          matchesSearch &&
+          matchesCategory &&
+          matchesDate
+        );
+      }
+    );
+
+  }, [
+    activities,
+    search,
+    categoryFilter,
+    dateFilter,
+  ]);
+
+
+  // =====================================================
+  // TOTAL EMISSION
+  // =====================================================
+
+  const totalEmission =
+    filteredActivities.reduce(
+      (total, activity) =>
+        total +
+        Number(
+          activity.emission || 0
+        ),
+      0
+    );
+
+
+  // =====================================================
+  // DELETE ACTIVITY
+  // =====================================================
+
+  const handleDelete = async (id) => {
+
+    const confirmed =
+      window.confirm(
+        "Are you sure you want to delete this activity?"
+      );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+
+      setDeletingId(id);
+
+      await deleteActivity(id);
+
+    } catch (err) {
+
+      console.error(
+        "Delete activity error:",
+        err
+      );
+
+      alert(
+        "Failed to delete activity."
+      );
+
+    } finally {
+
+      setDeletingId(null);
+    }
+  };
+
+
+  // =====================================================
+  // START EDIT
+  // =====================================================
+
+  const handleEdit = (activity) => {
+
+    setEditingId(activity.id);
+
+    setEditData({
+      category:
+        activity.category || "",
+
+      activityType:
+        activity.activityType || "",
+
+      quantity:
+        activity.quantity ?? "",
+
+      unit:
+        activity.unit || "",
+
+      activityDate:
+        getDateOnly(
+          activity.activityDate
+        ),
+    });
+  };
+
+
+  // =====================================================
+  // CANCEL EDIT
+  // =====================================================
+
+  const handleCancelEdit = () => {
+
+    setEditingId(null);
+
+    setEditData({
+      category: "",
+      activityType: "",
+      quantity: "",
+      unit: "",
+      activityDate: "",
+    });
+  };
+
+
+  // =====================================================
+  // SAVE EDIT
+  // =====================================================
+
+  const handleSaveEdit = async () => {
+
+    if (!editingId) {
+      return;
+    }
+
+    if (
+      !editData.category ||
+      !editData.activityType ||
+      !editData.quantity ||
+      !editData.unit
     ) {
 
-        User user = userRepository
-                .findByEmailIgnoreCase(email)
-                .orElseThrow(
-                        () -> new RuntimeException("User not found")
-                );
+      alert(
+        "Please fill all required fields."
+      );
 
-        return repository
-                .findByUserOrderByDateDesc(user)
-                .stream()
-                .map(activity ->
-                        new ActivityDtos.ActivityResponse(
-                                activity.getId(),
-                                activity.getCategory(),
-                                activity.getActivityType(),
-                                activity.getQuantity(),
-                                activity.getUnit(),
-                                activity.getEmission(),
-                                activity.getDate() != null
-                                        ? activity.getDate().toLocalDate()
-                                        : null,
-                                null
-                        )
+      return;
+    }
+
+    try {
+
+      await updateActivity(
+        editingId,
+        {
+          category:
+            editData.category,
+
+          activityType:
+            editData.activityType,
+
+          quantity:
+            Number(
+              editData.quantity
+            ),
+
+          unit:
+            editData.unit,
+
+          activityDate:
+            editData.activityDate ||
+            undefined,
+        }
+      );
+
+      handleCancelEdit();
+
+    } catch (err) {
+
+      console.error(
+        "Update activity error:",
+        err
+      );
+
+      alert(
+        "Failed to update activity."
+      );
+    }
+  };
+
+
+  // =====================================================
+  // EXPORT CSV
+  // =====================================================
+
+  const exportCSV = () => {
+
+    if (
+      filteredActivities.length === 0
+    ) {
+
+      alert(
+        "There are no activities to export."
+      );
+
+      return;
+    }
+
+
+    const headers = [
+      "Date",
+      "Category",
+      "Activity",
+      "Quantity",
+      "Unit",
+      "CO2e (kg)",
+    ];
+
+
+    const rows =
+      filteredActivities.map(
+        (activity) => [
+
+          activity.activityDate
+            ? getDateOnly(
+                activity.activityDate
+              )
+            : "",
+
+          activity.category || "",
+
+          activity.activityType || "",
+
+          activity.quantity ?? "",
+
+          activity.unit || "",
+
+          Number(
+            activity.emission || 0
+          ).toFixed(2),
+        ]
+      );
+
+
+    const csv = [
+      headers,
+      ...rows,
+    ]
+      .map(
+        (row) =>
+          row
+            .map(
+              (value) =>
+                `"${String(value).replace(
+                  /"/g,
+                  '""'
+                )}"`
+            )
+            .join(",")
+      )
+      .join("\n");
+
+
+    const blob =
+      new Blob(
+        [csv],
+        {
+          type:
+            "text/csv;charset=utf-8;",
+        }
+      );
+
+
+    const url =
+      URL.createObjectURL(blob);
+
+
+    const link =
+      document.createElement("a");
+
+    link.href = url;
+
+    link.download =
+      "ecotrack-activities.csv";
+
+    document.body.appendChild(link);
+
+    link.click();
+
+    document.body.removeChild(link);
+
+    URL.revokeObjectURL(url);
+  };
+
+
+  // =====================================================
+  // LOADING
+  // =====================================================
+
+  if (loading) {
+
+    return (
+      <div
+        style={{
+          padding: "40px",
+          textAlign: "center",
+        }}
+      >
+        <h2>
+          Loading activities...
+        </h2>
+
+        <p>
+          Please wait while we load
+          your EcoTrack activity history.
+        </p>
+      </div>
+    );
+  }
+
+
+  // =====================================================
+  // ERROR
+  // =====================================================
+
+  if (error) {
+
+    return (
+      <div
+        style={{
+          padding: "40px",
+          textAlign: "center",
+        }}
+      >
+
+        <h2>
+          Unable to load activities
+        </h2>
+
+        <p>
+          {error}
+        </p>
+
+        <button
+          onClick={refreshActivities}
+        >
+          Try Again
+        </button>
+
+      </div>
+    );
+  }
+
+
+  // =====================================================
+  // UI
+  // =====================================================
+
+  return (
+
+    <div
+      style={{
+        padding: "30px",
+        maxWidth: "1400px",
+        margin: "0 auto",
+      }}
+    >
+
+      {/* ===============================================
+          HEADER
+      =============================================== */}
+
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "30px",
+        }}
+      >
+
+        <div>
+
+          <div
+            style={{
+              fontSize: "13px",
+              fontWeight: "700",
+              color: "#21854d",
+              letterSpacing: "1px",
+            }}
+          >
+            ECOTRACK
+          </div>
+
+          <h1
+            style={{
+              margin: "5px 0",
+            }}
+          >
+            Activity History
+          </h1>
+
+          <p>
+            View and manage your carbon
+            footprint activities.
+          </p>
+
+        </div>
+
+
+        <button
+          onClick={exportCSV}
+          style={{
+            padding: "10px 16px",
+            cursor: "pointer",
+          }}
+        >
+          ↓ Export CSV
+        </button>
+
+      </div>
+
+
+      {/* ===============================================
+          SUMMARY
+      =============================================== */}
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns:
+            "repeat(3, 1fr)",
+          gap: "15px",
+          marginBottom: "25px",
+        }}
+      >
+
+        <div
+          style={{
+            padding: "20px",
+            background: "#ffffff",
+            borderRadius: "12px",
+          }}
+        >
+
+          <div>
+            Activities
+          </div>
+
+          <h2>
+            {filteredActivities.length}
+          </h2>
+
+        </div>
+
+
+        <div
+          style={{
+            padding: "20px",
+            background: "#ffffff",
+            borderRadius: "12px",
+          }}
+        >
+
+          <div>
+            Total CO₂e
+          </div>
+
+          <h2>
+            {totalEmission.toFixed(2)}
+            {" "}kg
+          </h2>
+
+        </div>
+
+
+        <div
+          style={{
+            padding: "20px",
+            background: "#ffffff",
+            borderRadius: "12px",
+          }}
+        >
+
+          <div>
+            Total Records
+          </div>
+
+          <h2>
+            {activities.length}
+          </h2>
+
+        </div>
+
+      </div>
+
+
+      {/* ===============================================
+          SEARCH + FILTERS
+      =============================================== */}
+
+      <div
+        style={{
+          display: "flex",
+          gap: "12px",
+          flexWrap: "wrap",
+          marginBottom: "20px",
+        }}
+      >
+
+        <input
+          type="text"
+          placeholder="Search activities..."
+          value={search}
+          onChange={(e) =>
+            setSearch(e.target.value)
+          }
+          style={{
+            padding: "11px",
+            minWidth: "260px",
+          }}
+        />
+
+
+        <select
+          value={categoryFilter}
+          onChange={(e) =>
+            setCategoryFilter(
+              e.target.value
+            )
+          }
+          style={{
+            padding: "11px",
+          }}
+        >
+
+          <option value="ALL">
+            All Categories
+          </option>
+
+          <option value="TRANSPORTATION">
+            Transportation
+          </option>
+
+          <option value="ELECTRICITY">
+            Electricity
+          </option>
+
+          <option value="FOOD">
+            Food
+          </option>
+
+          <option value="WASTE">
+            Waste
+          </option>
+
+          <option value="WATER">
+            Water
+          </option>
+
+        </select>
+
+
+        <select
+          value={dateFilter}
+          onChange={(e) =>
+            setDateFilter(
+              e.target.value
+            )
+          }
+          style={{
+            padding: "11px",
+          }}
+        >
+
+          <option value="ALL">
+            All Dates
+          </option>
+
+          <option value="TODAY">
+            Today
+          </option>
+
+          <option value="YESTERDAY">
+            Yesterday
+          </option>
+
+          <option value="THIS_MONTH">
+            This Month
+          </option>
+
+        </select>
+
+      </div>
+
+
+      {/* ===============================================
+          TABLE
+      =============================================== */}
+
+      {filteredActivities.length > 0 ? (
+
+        <div
+          style={{
+            overflowX: "auto",
+            background: "#ffffff",
+            borderRadius: "12px",
+          }}
+        >
+
+          <table
+            style={{
+              width: "100%",
+              borderCollapse:
+                "collapse",
+            }}
+          >
+
+            <thead>
+
+              <tr>
+
+                <th
+                  style={{
+                    padding: "15px",
+                    textAlign: "left",
+                  }}
+                >
+                  DATE
+                </th>
+
+                <th
+                  style={{
+                    padding: "15px",
+                    textAlign: "left",
+                  }}
+                >
+                  CATEGORY
+                </th>
+
+                <th
+                  style={{
+                    padding: "15px",
+                    textAlign: "left",
+                  }}
+                >
+                  ACTIVITY
+                </th>
+
+                <th
+                  style={{
+                    padding: "15px",
+                    textAlign: "left",
+                  }}
+                >
+                  QUANTITY
+                </th>
+
+                <th
+                  style={{
+                    padding: "15px",
+                    textAlign: "left",
+                  }}
+                >
+                  CO₂e
+                </th>
+
+                <th
+                  style={{
+                    padding: "15px",
+                    textAlign: "left",
+                  }}
+                >
+                  ACTIONS
+                </th>
+
+              </tr>
+
+            </thead>
+
+
+            <tbody>
+
+              {filteredActivities.map(
+                (activity) => (
+
+                  <React.Fragment
+                    key={activity.id}
+                  >
+
+                    {/* =================================
+                        NORMAL ROW
+                    ================================= */}
+
+                    {editingId !==
+                    activity.id ? (
+
+                      <tr>
+
+                        <td
+                          style={{
+                            padding: "15px",
+                          }}
+                        >
+
+                          <strong>
+
+                            {formatDate(
+                              activity.activityDate
+                            )}
+
+                          </strong>
+
+                        </td>
+
+
+                        <td
+                          style={{
+                            padding: "15px",
+                          }}
+                        >
+
+                          {activity.category}
+
+                        </td>
+
+
+                        <td
+                          style={{
+                            padding: "15px",
+                            fontWeight: "600",
+                          }}
+                        >
+
+                          {activity.activityType}
+
+                        </td>
+
+
+                        <td
+                          style={{
+                            padding: "15px",
+                          }}
+                        >
+
+                          {activity.quantity}
+                          {" "}
+                          {activity.unit}
+
+                        </td>
+
+
+                        <td
+                          style={{
+                            padding: "15px",
+                            fontWeight: "700",
+                          }}
+                        >
+
+                          {Number(
+                            activity.emission || 0
+                          ).toFixed(2)}
+
+                          {" "}kg
+
+                        </td>
+
+
+                        <td
+                          style={{
+                            padding: "15px",
+                          }}
+                        >
+
+                          <button
+                            onClick={() =>
+                              handleEdit(
+                                activity
+                              )
+                            }
+                            style={{
+                              marginRight:
+                                "6px",
+                              cursor:
+                                "pointer",
+                            }}
+                          >
+                            ✎
+                          </button>
+
+
+                          <button
+                            onClick={() =>
+                              handleDelete(
+                                activity.id
+                              )
+                            }
+                            disabled={
+                              deletingId ===
+                              activity.id
+                            }
+                            style={{
+                              cursor:
+                                "pointer",
+                            }}
+                          >
+
+                            {deletingId ===
+                            activity.id
+                              ? "..."
+                              : "🗑"}
+
+                          </button>
+
+                        </td>
+
+                      </tr>
+
+                    ) : (
+
+                      /* =================================
+                         EDIT ROW
+                      ================================= */
+
+                      <tr>
+
+                        <td
+                          style={{
+                            padding: "10px",
+                          }}
+                        >
+
+                          <input
+                            type="date"
+                            value={
+                              editData.activityDate
+                            }
+                            onChange={(e) =>
+                              setEditData({
+                                ...editData,
+                                activityDate:
+                                  e.target.value,
+                              })
+                            }
+                          />
+
+                        </td>
+
+
+                        <td
+                          style={{
+                            padding: "10px",
+                          }}
+                        >
+
+                          <select
+                            value={
+                              editData.category
+                            }
+                            onChange={(e) =>
+                              setEditData({
+                                ...editData,
+                                category:
+                                  e.target.value,
+                              })
+                            }
+                          >
+
+                            <option value="TRANSPORTATION">
+                              Transportation
+                            </option>
+
+                            <option value="ELECTRICITY">
+                              Electricity
+                            </option>
+
+                            <option value="FOOD">
+                              Food
+                            </option>
+
+                            <option value="WASTE">
+                              Waste
+                            </option>
+
+                            <option value="WATER">
+                              Water
+                            </option>
+
+                          </select>
+
+                        </td>
+
+
+                        <td
+                          style={{
+                            padding: "10px",
+                          }}
+                        >
+
+                          <input
+                            type="text"
+                            value={
+                              editData.activityType
+                            }
+                            onChange={(e) =>
+                              setEditData({
+                                ...editData,
+                                activityType:
+                                  e.target.value,
+                              })
+                            }
+                          />
+
+                        </td>
+
+
+                        <td
+                          style={{
+                            padding: "10px",
+                          }}
+                        >
+
+                          <input
+                            type="number"
+                            min="0"
+                            value={
+                              editData.quantity
+                            }
+                            onChange={(e) =>
+                              setEditData({
+                                ...editData,
+                                quantity:
+                                  e.target.value,
+                              })
+                            }
+                            style={{
+                              width: "80px",
+                            }}
+                          />
+
+
+                          <input
+                            type="text"
+                            value={
+                              editData.unit
+                            }
+                            onChange={(e) =>
+                              setEditData({
+                                ...editData,
+                                unit:
+                                  e.target.value,
+                              })
+                            }
+                            style={{
+                              width: "70px",
+                              marginLeft:
+                                "5px",
+                            }}
+                          />
+
+                        </td>
+
+
+                        <td
+                          style={{
+                            padding: "10px",
+                          }}
+                        >
+                          —
+                        </td>
+
+
+                        <td
+                          style={{
+                            padding: "10px",
+                          }}
+                        >
+
+                          <button
+                            onClick={
+                              handleSaveEdit
+                            }
+                            style={{
+                              marginRight:
+                                "6px",
+                              cursor:
+                                "pointer",
+                            }}
+                          >
+                            Save
+                          </button>
+
+
+                          <button
+                            onClick={
+                              handleCancelEdit
+                            }
+                            style={{
+                              cursor:
+                                "pointer",
+                            }}
+                          >
+                            Cancel
+                          </button>
+
+                        </td>
+
+                      </tr>
+
+                    )}
+
+                  </React.Fragment>
+
                 )
-                .toList();
-    }
+              )}
 
-    // =====================================================
-    // GET ACTIVITY BY ID
-    // =====================================================
+            </tbody>
 
-    public Activity getActivityById(Long id) {
+          </table>
 
-        return repository
-                .findById(id)
-                .orElseThrow(
-                        () -> new RuntimeException("Activity not found")
-                );
-    }
+        </div>
 
-    // =====================================================
-    // GET OWNED ACTIVITY
-    // =====================================================
+      ) : (
 
-    private Activity getOwnedActivity(
-            Long id,
-            String email
-    ) {
+        /* ===============================================
+           EMPTY STATE
+        =============================================== */
 
-        User user = userRepository
-                .findByEmailIgnoreCase(email)
-                .orElseThrow(
-                        () -> new RuntimeException("User not found")
-                );
+        <div
+          style={{
+            padding: "60px 20px",
+            textAlign: "center",
+            background: "#ffffff",
+            borderRadius: "12px",
+          }}
+        >
 
-        Activity activity = repository
-                .findById(id)
-                .orElseThrow(
-                        () -> new RuntimeException("Activity not found")
-                );
+          <div
+            style={{
+              fontSize: "50px",
+              marginBottom: "15px",
+            }}
+          >
+            🌱
+          </div>
 
-        if (
-                activity.getUser() == null ||
-                activity.getUser().getId() == null ||
-                !activity.getUser().getId().equals(user.getId())
-        ) {
+          <h2>
+            No activities found
+          </h2>
 
-            throw new RuntimeException(
-                    "You do not have permission to access this activity"
-            );
-        }
+          <p>
+            Start tracking your
+            transportation, electricity,
+            food, waste or water usage.
+          </p>
 
-        return activity;
-    }
+        </div>
 
-    // =====================================================
-    // CREATE - ENTITY BASED
-    // =====================================================
+      )}
 
-    public Activity createActivity(
-            Activity activity,
-            String email
-    ) {
-
-        User user = userRepository
-                .findByEmailIgnoreCase(email)
-                .orElseThrow(
-                        () -> new RuntimeException("User not found")
-                );
-
-        activity.setUser(user);
-
-        /*
-         * IMPORTANT:
-         * activity_date is NOT NULL in PostgreSQL.
-         * Therefore always make sure date has a value.
-         */
-        if (activity.getDate() == null) {
-            activity.setDate(LocalDateTime.now());
-        }
-
-        return repository.save(activity);
-    }
-
-    // =====================================================
-    // CREATE - DTO BASED
-    // =====================================================
-
-    public ActivityDtos.ActivityResponse create(
-            String email,
-            ActivityDtos.CreateActivityRequest request
-    ) {
-
-        // -------------------------------------------------
-        // 1. Find logged-in user
-        // -------------------------------------------------
-
-        User user = userRepository
-                .findByEmailIgnoreCase(email)
-                .orElseThrow(
-                        () -> new RuntimeException("User not found")
-                );
-
-        // -------------------------------------------------
-        // 2. Validate request
-        // -------------------------------------------------
-
-        if (request.category() == null ||
-                request.category().isBlank()) {
-
-            throw new IllegalArgumentException(
-                    "Category is required"
-            );
-        }
-
-        if (request.activityType() == null ||
-                request.activityType().isBlank()) {
-
-            throw new IllegalArgumentException(
-                    "Activity type is required"
-            );
-        }
-
-        if (request.quantity() == null ||
-                request.quantity() <= 0) {
-
-            throw new IllegalArgumentException(
-                    "Quantity must be greater than 0"
-            );
-        }
-
-        if (request.unit() == null ||
-                request.unit().isBlank()) {
-
-            throw new IllegalArgumentException(
-                    "Unit is required"
-            );
-        }
-
-        // -------------------------------------------------
-        // 3. Find emission factor
-        // -------------------------------------------------
-
-        var emissionFactor =
-                emissionFactorRepository
-                        .findFirstByCategoryIgnoreCaseAndActivityTypeIgnoreCaseAndActiveTrueOrderByIdDesc(
-                                request.category(),
-                                request.activityType()
-                        )
-                        .orElseThrow(
-                                () -> new EmissionFactorNotFoundException(
-                                        "Emission factor not found for "
-                                                + request.category()
-                                                + " - "
-                                                + request.activityType()
-                                )
-                        );
-
-        // -------------------------------------------------
-        // 4. Calculate emission
-        // -------------------------------------------------
-
-        double emission =
-                request.quantity()
-                        * emissionFactor.getFactor();
-
-        // -------------------------------------------------
-        // 5. Determine activity date
-        // -------------------------------------------------
-
-        LocalDate activityDate =
-                request.activityDate() != null
-                        ? request.activityDate()
-                        : LocalDate.now();
-
-        LocalDateTime activityDateTime =
-                LocalDateTime.of(
-                        activityDate,
-                        LocalTime.now()
-                );
-
-        // -------------------------------------------------
-        // 6. Create Activity
-        // -------------------------------------------------
-
-        Activity activity = new Activity();
-
-        // User
-        activity.setUser(user);
-
-        // Basic activity information
-        activity.setCategory(
-                request.category().toUpperCase()
-        );
-
-        activity.setActivityType(
-                request.activityType().toUpperCase()
-        );
-
-        activity.setQuantity(
-                request.quantity()
-        );
-
-        activity.setUnit(
-                request.unit()
-        );
-
-        // -------------------------------------------------
-        // VERY IMPORTANT
-        // This fixes:
-        // "null value in column activity_date"
-        // -------------------------------------------------
-
-        activity.setDate(activityDateTime);
-
-        // -------------------------------------------------
-        // 7. Emission information
-        // -------------------------------------------------
-
-        activity.setEmission(emission);
-
-        activity.setEmissionFactor(
-                emissionFactor.getFactor()
-        );
-
-        activity.setEmissionFactorUnit(
-                emissionFactor.getUnit()
-        );
-
-        activity.setFactorSource(
-                emissionFactor.getSource()
-        );
-
-        activity.setFactorRegion(
-                emissionFactor.getRegion()
-        );
-
-        /*
-         * If your EmissionFactor entity has a year field,
-         * use that instead of hardcoding 2024.
-         */
-        activity.setFactorYear(2024);
-
-        // Metadata/details
-        activity.setDetails(
-                request.metadata()
-        );
-
-        // -------------------------------------------------
-        // 8. SAVE TO DATABASE
-        // -------------------------------------------------
-
-        Activity saved =
-                repository.save(activity);
-
-        // -------------------------------------------------
-        // 9. RETURN RESPONSE
-        // -------------------------------------------------
-
-        return new ActivityDtos.ActivityResponse(
-                saved.getId(),
-                saved.getCategory(),
-                saved.getActivityType(),
-                saved.getQuantity(),
-                saved.getUnit(),
-                saved.getEmission(),
-                saved.getDate() != null
-                        ? saved.getDate().toLocalDate()
-                        : activityDate,
-                emissionFactor.getVersion()
-        );
-    }
-
-    // =====================================================
-    // UPDATE
-    // =====================================================
-
-    public ActivityDtos.ActivityResponse update(
-            Long id,
-            String email,
-            ActivityDtos.CreateActivityRequest request
-    ) {
-
-        // -------------------------------------------------
-        // 1. Find owned activity
-        // -------------------------------------------------
-
-        Activity existing =
-                getOwnedActivity(id, email);
-
-        // -------------------------------------------------
-        // 2. Find emission factor
-        // -------------------------------------------------
-
-        var emissionFactor =
-                emissionFactorRepository
-                        .findFirstByCategoryIgnoreCaseAndActivityTypeIgnoreCaseAndActiveTrueOrderByIdDesc(
-                                request.category(),
-                                request.activityType()
-                        )
-                        .orElseThrow(
-                                () -> new EmissionFactorNotFoundException(
-                                        "Emission factor not found for "
-                                                + request.category()
-                                                + " - "
-                                                + request.activityType()
-                                )
-                        );
-
-        // -------------------------------------------------
-        // 3. Calculate emission
-        // -------------------------------------------------
-
-        double emission =
-                request.quantity()
-                        * emissionFactor.getFactor();
-
-        // -------------------------------------------------
-        // 4. Update fields
-        // -------------------------------------------------
-
-        existing.setCategory(
-                request.category().toUpperCase()
-        );
-
-        existing.setActivityType(
-                request.activityType().toUpperCase()
-        );
-
-        existing.setQuantity(
-                request.quantity()
-        );
-
-        existing.setUnit(
-                request.unit()
-        );
-
-        existing.setEmission(
-                emission
-        );
-
-        existing.setEmissionFactor(
-                emissionFactor.getFactor()
-        );
-
-        existing.setEmissionFactorUnit(
-                emissionFactor.getUnit()
-        );
-
-        existing.setFactorSource(
-                emissionFactor.getSource()
-        );
-
-        existing.setFactorRegion(
-                emissionFactor.getRegion()
-        );
-
-        existing.setFactorYear(2024);
-
-        existing.setDetails(
-                request.metadata()
-        );
-
-        // -------------------------------------------------
-        // 5. Update date
-        // -------------------------------------------------
-
-        LocalDate activityDate =
-                request.activityDate() != null
-                        ? request.activityDate()
-                        : existing.getDate() != null
-                                ? existing.getDate().toLocalDate()
-                                : LocalDate.now();
-
-        existing.setDate(
-                LocalDateTime.of(
-                        activityDate,
-                        LocalTime.now()
-                )
-        );
-
-        // -------------------------------------------------
-        // 6. Save
-        // -------------------------------------------------
-
-        Activity saved =
-                repository.save(existing);
-
-        // -------------------------------------------------
-        // 7. Return
-        // -------------------------------------------------
-
-        return new ActivityDtos.ActivityResponse(
-                saved.getId(),
-                saved.getCategory(),
-                saved.getActivityType(),
-                saved.getQuantity(),
-                saved.getUnit(),
-                saved.getEmission(),
-                saved.getDate() != null
-                        ? saved.getDate().toLocalDate()
-                        : activityDate,
-                emissionFactor.getVersion()
-        );
-    }
-
-    // =====================================================
-    // DELETE
-    // =====================================================
-
-    public void deleteActivity(
-            Long id,
-            String email
-    ) {
-
-        Activity activity =
-                getOwnedActivity(id, email);
-
-        repository.delete(activity);
-    }
+    </div>
+  );
 }

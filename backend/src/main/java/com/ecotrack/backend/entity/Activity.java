@@ -1,10 +1,19 @@
 package com.ecotrack.backend.entity;
 
+import java.time.LocalDateTime;
+
 import com.ecotrack.backend.user.User;
 
-import jakarta.persistence.*;
-
-import java.time.LocalDateTime;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "activities")
@@ -20,8 +29,8 @@ public class Activity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(
-            name = "user_id",
-            nullable = false
+        name = "user_id",
+        nullable = false
     )
     private User user;
 
@@ -31,19 +40,16 @@ public class Activity {
     // =========================
 
     @Column(
-            name = "category",
-            nullable = false
+        name = "category",
+        nullable = false
     )
     private String category;
-
 
     @Column(name = "activity_type")
     private String activityType;
 
-
     @Column(name = "quantity")
     private Double quantity;
-
 
     @Column(name = "unit")
     private String unit;
@@ -54,35 +60,28 @@ public class Activity {
     // =========================
 
     @Column(
-            name = "emission",
-            nullable = false
+        name = "emission",
+        nullable = false
     )
     private Double emission;
-
 
     @Column(name = "emission_factor")
     private Double emissionFactor;
 
-
     @Column(name = "emission_factor_unit")
     private String emissionFactorUnit;
-
 
     @Column(name = "factor_source")
     private String factorSource;
 
-
     @Column(name = "factor_region")
     private String factorRegion;
-
 
     @Column(name = "factor_year")
     private Integer factorYear;
 
-
     @Column(name = "calculation_boundary")
     private String calculationBoundary;
-
 
     @Column(name = "details")
     private String details;
@@ -92,25 +91,15 @@ public class Activity {
     // DATES
     // =========================
 
-    /*
-     * IMPORTANT:
-     *
-     * Neon database column = activity_date
-     * Java field = date
-     *
-     * Therefore explicitly map them.
-     */
-
     @Column(
-            name = "activity_date",
-            nullable = false
+        name = "activity_date",
+        nullable = false
     )
-    private LocalDateTime date;
-
+    private LocalDateTime activityDate;
 
     @Column(
-            name = "created_at",
-            nullable = false
+        name = "created_at",
+        nullable = false
     )
     private LocalDateTime createdAt;
 
@@ -130,8 +119,8 @@ public class Activity {
     @PrePersist
     protected void onCreate() {
 
-        if (date == null) {
-            date = LocalDateTime.now();
+        if (activityDate == null) {
+            activityDate = LocalDateTime.now();
         }
 
         if (createdAt == null) {
@@ -221,7 +210,7 @@ public class Activity {
     }
 
     public void setEmissionFactorUnit(
-            String emissionFactorUnit
+        String emissionFactorUnit
     ) {
         this.emissionFactorUnit = emissionFactorUnit;
     }
@@ -232,7 +221,7 @@ public class Activity {
     }
 
     public void setFactorSource(
-            String factorSource
+        String factorSource
     ) {
         this.factorSource = factorSource;
     }
@@ -243,7 +232,7 @@ public class Activity {
     }
 
     public void setFactorRegion(
-            String factorRegion
+        String factorRegion
     ) {
         this.factorRegion = factorRegion;
     }
@@ -254,7 +243,7 @@ public class Activity {
     }
 
     public void setFactorYear(
-            Integer factorYear
+        Integer factorYear
     ) {
         this.factorYear = factorYear;
     }
@@ -265,7 +254,7 @@ public class Activity {
     }
 
     public void setCalculationBoundary(
-            String calculationBoundary
+        String calculationBoundary
     ) {
         this.calculationBoundary = calculationBoundary;
     }
@@ -280,21 +269,31 @@ public class Activity {
     }
 
 
-    public LocalDateTime getDate() {
-        return date;
+    // =========================
+    // ACTIVITY DATE
+    // =========================
+
+    public LocalDateTime getActivityDate() {
+        return activityDate;
     }
 
-    public void setDate(LocalDateTime date) {
-        this.date = date;
+    public void setActivityDate(
+        LocalDateTime activityDate
+    ) {
+        this.activityDate = activityDate;
     }
 
+
+    // =========================
+    // CREATED DATE
+    // =========================
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
     public void setCreatedAt(
-            LocalDateTime createdAt
+        LocalDateTime createdAt
     ) {
         this.createdAt = createdAt;
     }
