@@ -293,18 +293,18 @@ export default function Dashboard() {
   // ==========================================
 
   const sustainabilityScore =
-    activities.length === 0
-      ? 100
-      : Math.max(
-          0,
-          Math.min(
-            100,
-            Math.round(
-              100 -
-                totalEmission * 5
-            )
+  activities.length === 0
+    ? 100
+    : Math.max(
+        0,
+        Math.min(
+          100,
+          Math.round(
+            100 - totalEmission * 2
           )
-        );
+        )
+      );
+    
 
 
   // ==========================================
@@ -989,3 +989,6 @@ function MetricCard({
 
   );
 }
+
+
+
