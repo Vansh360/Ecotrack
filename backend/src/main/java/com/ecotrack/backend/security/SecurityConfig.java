@@ -97,8 +97,8 @@ public class SecurityConfig {
 
        configuration.setAllowedOrigins(
     List.of(
-        "http://localhost:5173",
-        "https://vansh360.github.io"
+        "http://localhost:5173"
+        // "https://vansh360.github.io"
     )
 );
 
