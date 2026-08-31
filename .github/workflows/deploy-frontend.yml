@@ -18,6 +18,10 @@ concurrency:
 
 jobs:
 
+  # ==========================================
+  # BUILD
+  # ==========================================
+
   build:
     runs-on: ubuntu-latest
 
@@ -61,6 +65,14 @@ jobs:
         env:
           VITE_API_URL: https://ecotrack-backend-g66f.onrender.com/api
         run: npm run build
+
+
+      # ==========================================
+      # FIX REACT ROUTER FOR GITHUB PAGES
+      # ==========================================
+
+      - name: Create 404 fallback for React routes
+        run: cp frontend/dist/index.html frontend/dist/404.html
 
 
       # ==========================================
