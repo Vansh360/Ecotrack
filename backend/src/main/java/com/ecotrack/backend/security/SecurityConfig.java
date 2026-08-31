@@ -27,18 +27,18 @@ import com.ecotrack.backend.user.UserRepository;
 @Configuration
 public class SecurityConfig {
 
-
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
-
 
     public SecurityConfig(
             JwtAuthenticationFilter jwtAuthenticationFilter
     ) {
-
-        this.jwtAuthenticationFilter =
-                jwtAuthenticationFilter;
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
 
+
+    // =====================================================
+    // PASSWORD ENCODER
+    // =====================================================
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -47,23 +47,42 @@ public class SecurityConfig {
     }
 
 
+    // =====================================================
+    // USER DETAILS SERVICE
+    // =====================================================
+
     @Bean
     public UserDetailsService userDetailsService(
             UserRepository userRepository
     ) {
 
         return username ->
-                userRepository.findByEmailIgnoreCase(username)
-                        .map(user -> User.withUsername(user.getEmail())
-                                .password(user.getPassword())
-                                .roles(user.getRole())
-                                .build())
-                        .orElseThrow(() ->
-                                new UsernameNotFoundException(
-                                        "User not found"
-                                ));
+                userRepository
+                        .findByEmailIgnoreCase(username)
+                        .map(user ->
+                                User.withUsername(
+                                        user.getEmail()
+                                )
+                                .password(
+                                        user.getPassword()
+                                )
+                                .roles(
+                                        user.getRole()
+                                )
+                                .build()
+                        )
+                        .orElseThrow(
+                                () ->
+                                        new UsernameNotFoundException(
+                                                "User not found"
+                                        )
+                        );
     }
 
+
+    // =====================================================
+    // AUTHENTICATION PROVIDER
+    // =====================================================
 
     @Bean
     public AuthenticationProvider authenticationProvider(
@@ -72,13 +91,21 @@ public class SecurityConfig {
     ) {
 
         DaoAuthenticationProvider provider =
-                new DaoAuthenticationProvider(userDetailsService);
+                new DaoAuthenticationProvider(
+                        userDetailsService
+                );
 
-        provider.setPasswordEncoder(passwordEncoder);
+        provider.setPasswordEncoder(
+                passwordEncoder
+        );
 
         return provider;
     }
 
+
+    // =====================================================
+    // AUTHENTICATION MANAGER
+    // =====================================================
 
     @Bean
     public AuthenticationManager authenticationManager(
@@ -89,39 +116,82 @@ public class SecurityConfig {
     }
 
 
+    // =====================================================
+    // CORS
+    // =====================================================
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
 
         CorsConfiguration configuration =
                 new CorsConfiguration();
 
-       configuration.setAllowedOrigins(
-    List.of(
-        "http://localhost:5173"
-        // "https://vansh360.github.io"
-    )
-);
+
+        // -------------------------------------------------
+        // ALLOWED FRONTENDS
+        // -------------------------------------------------
+
+        configuration.setAllowedOrigins(
+                List.of(
+                        "http://localhost:5173",
+                        "https://vansh360.github.io"
+                )
+        );
+
+
+        // -------------------------------------------------
+        // ALLOWED METHODS
+        // -------------------------------------------------
 
         configuration.setAllowedMethods(
                 List.of(
-                        "GET",
-                        "POST",
-                        "PUT",
-                        "DELETE",
-                        "PATCH",
-                        "OPTIONS"
+                        HttpMethod.GET.name(),
+                        HttpMethod.POST.name(),
+                        HttpMethod.PUT.name(),
+                        HttpMethod.DELETE.name(),
+                        HttpMethod.PATCH.name(),
+                        HttpMethod.OPTIONS.name()
                 )
         );
+
+
+        // -------------------------------------------------
+        // ALLOWED HEADERS
+        // -------------------------------------------------
 
         configuration.setAllowedHeaders(
                 List.of(
                         "Authorization",
                         "Content-Type",
-                        "Accept"
+                        "Accept",
+                        "Origin"
                 )
         );
 
-        configuration.setAllowCredentials(true);
+
+        // -------------------------------------------------
+        // EXPOSED HEADERS
+        // -------------------------------------------------
+
+        configuration.setExposedHeaders(
+                List.of(
+                        "Authorization"
+                )
+        );
+
+
+        // -------------------------------------------------
+        // CREDENTIALS
+        // -------------------------------------------------
+
+        configuration.setAllowCredentials(
+                true
+        );
+
+
+        // -------------------------------------------------
+        // REGISTER CORS
+        // -------------------------------------------------
 
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();
@@ -135,6 +205,10 @@ public class SecurityConfig {
     }
 
 
+    // =====================================================
+    // SECURITY FILTER CHAIN
+    // =====================================================
+
     @Bean
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http
@@ -142,9 +216,9 @@ public class SecurityConfig {
 
         http
 
-                // ----------------------------------
+                // -------------------------------------------------
                 // CSRF
-                // ----------------------------------
+                // -------------------------------------------------
 
                 .csrf(
                         csrf ->
@@ -152,18 +226,18 @@ public class SecurityConfig {
                 )
 
 
-                // ----------------------------------
+                // -------------------------------------------------
                 // CORS
-                // ----------------------------------
+                // -------------------------------------------------
 
                 .cors(
                         cors -> {}
                 )
 
 
-                // ----------------------------------
+                // -------------------------------------------------
                 // SESSION
-                // ----------------------------------
+                // -------------------------------------------------
 
                 .sessionManagement(
                         session ->
@@ -173,33 +247,39 @@ public class SecurityConfig {
                 )
 
 
-                // ----------------------------------
+                // -------------------------------------------------
                 // AUTHORIZATION
-                // ----------------------------------
+                // -------------------------------------------------
 
                 .authorizeHttpRequests(
-                        auth -> auth
+                        auth ->
+                                auth
 
-                                .requestMatchers(
-                                        "/api/auth/**",
-                                        "/api/health"
-                                )
-                                .permitAll()
+                                        // Public endpoints
+                                        .requestMatchers(
+                                                "/api/auth/**",
+                                                "/api/health"
+                                        )
+                                        .permitAll()
 
-                                .requestMatchers(
-                                        HttpMethod.OPTIONS,
-                                        "/**"
-                                )
-                                .permitAll()
 
-                                .anyRequest()
-                                .authenticated()
+                                        // CORS preflight
+                                        .requestMatchers(
+                                                HttpMethod.OPTIONS,
+                                                "/**"
+                                        )
+                                        .permitAll()
+
+
+                                        // Everything else requires JWT
+                                        .anyRequest()
+                                        .authenticated()
                 )
 
 
-                // ----------------------------------
+                // -------------------------------------------------
                 // JWT FILTER
-                // ----------------------------------
+                // -------------------------------------------------
 
                 .addFilterBefore(
                         jwtAuthenticationFilter,
