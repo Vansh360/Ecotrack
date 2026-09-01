@@ -153,22 +153,131 @@ export default function Dashboard() {
 
 
   // ==========================================
-  // TOTAL EMISSION
+  // MONTHLY EMISSION + CO2 REDUCTION
   // ==========================================
 
-  const totalEmission =
-    useMemo(() => {
+  const getMonthKey = (date) => {
+    if (!date) return null;
 
-      return activities.reduce(
+    const parsed = new Date(date);
+
+    if (Number.isNaN(parsed.getTime())) {
+      return null;
+    }
+
+    return `${parsed.getFullYear()}-${String(
+      parsed.getMonth() + 1
+    ).padStart(2, "0")}`;
+  };
+
+  const now = new Date();
+
+  const currentMonthKey = `${now.getFullYear()}-${String(
+    now.getMonth() + 1
+  ).padStart(2, "0")}`;
+
+  const previousMonthDate = new Date(
+    now.getFullYear(),
+    now.getMonth() - 1,
+    1
+  );
+
+  const previousMonthKey = `${previousMonthDate.getFullYear()}-${String(
+    previousMonthDate.getMonth() + 1
+  ).padStart(2, "0")}`;
+
+  // Current month emissions
+  const currentMonthEmission = useMemo(() => {
+    return activities
+      .filter((activity) => {
+        const date =
+          activity.activityDate ||
+          activity.date ||
+          activity.createdAt;
+
+        return getMonthKey(date) === currentMonthKey;
+      })
+      .reduce(
         (total, activity) =>
-          total +
-          Number(
-            activity.emission || 0
-          ),
+          total + Number(activity.emission || 0),
         0
       );
+  }, [activities, currentMonthKey]);
 
-    }, [activities]);
+  // Previous month emissions
+  const previousMonthEmission = useMemo(() => {
+    return activities
+      .filter((activity) => {
+        const date =
+          activity.activityDate ||
+          activity.date ||
+          activity.createdAt;
+
+        return getMonthKey(date) === previousMonthKey;
+      })
+      .reduce(
+        (total, activity) =>
+          total + Number(activity.emission || 0),
+        0
+      );
+  }, [activities, previousMonthKey]);
+
+  // Actual CO2 reduced
+  const co2Reduced = useMemo(() => {
+    if (previousMonthEmission <= 0) {
+      return 0;
+    }
+
+    return Math.max(
+      previousMonthEmission - currentMonthEmission,
+      0
+    );
+  }, [
+    previousMonthEmission,
+    currentMonthEmission,
+  ]);
+
+  // Month-to-month change
+  const co2Change = useMemo(() => {
+    if (previousMonthEmission <= 0) {
+      return {
+        direction: "same",
+        percentage: 0,
+      };
+    }
+
+    const percentage =
+      Math.abs(
+        ((currentMonthEmission - previousMonthEmission) /
+          previousMonthEmission) *
+          100
+      );
+
+    if (currentMonthEmission < previousMonthEmission) {
+      return {
+        direction: "down",
+        percentage: Number(percentage.toFixed(1)),
+      };
+    }
+
+    if (currentMonthEmission > previousMonthEmission) {
+      return {
+        direction: "up",
+        percentage: Number(percentage.toFixed(1)),
+      };
+    }
+
+    return {
+      direction: "same",
+      percentage: 0,
+    };
+  }, [
+    currentMonthEmission,
+    previousMonthEmission,
+  ]);
+
+  // Keep this name for the Carbon Footprint card
+  const totalEmission = currentMonthEmission;
 
 
   // ==========================================
@@ -445,11 +554,17 @@ export default function Dashboard() {
 
 
         <MetricCard
-          icon={<Target size={19} />}
+          icon={<ArrowDownRight size={19} />}
           title="CO₂ Reduced"
-          value="0.00"
+          value={co2Reduced.toFixed(2)}
           unit="kg"
-          description="Compared with last month"
+          description={
+            co2Change.direction === "down"
+              ? `${co2Change.percentage}% lower than last month`
+              : co2Change.direction === "up"
+              ? `${co2Change.percentage}% higher than last month`
+              : "Same as last month"
+          }
         />
 
       </div>
