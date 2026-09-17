@@ -1,164 +1,177 @@
 import { useState } from "react";
-import {
-  Droplets,
-  Calculator,
-  CheckCircle,
-} from "lucide-react";
+import { Droplets, CheckCircle } from "lucide-react";
 
 import { useActivities } from "../../context/ActivityContext";
-import {
-  calculateWaterEmission,
-} from "../../utils/carbonCalculator";
+import { calculateWaterEmission } from "../../utils/carbonCalculator";
+
+const WATER_TYPES = [
+  { value: "DRINKING_WATER", label: "Drinking Water" },
+  { value: "SHOWER_BATH", label: "Shower / Bath" },
+  { value: "TOILET_FLUSHING", label: "Toilet Flushing" },
+  { value: "LAUNDRY", label: "Laundry" },
+  { value: "DISHWASHING", label: "Dishwashing" },
+  { value: "GARDENING", label: "Gardening & Plants" },
+  { value: "CAR_WASHING", label: "Car Washing" },
+  { value: "HOUSE_CLEANING", label: "House Cleaning" },
+  { value: "COOKING", label: "Cooking" },
+  { value: "RAINWATER_REUSED", label: "Rainwater / Reused Water" },
+];
 
 export default function Water() {
   const { addActivity } = useActivities();
 
-  const [usage, setUsage] = useState("");
-  const [emission, setEmission] = useState(null);
+  const [waterType, setWaterType] = useState("");
+  const [quantity, setQuantity] = useState("");
+  const [details, setDetails] = useState("");
+  const [estimatedEmission, setEstimatedEmission] = useState(null);
+  const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
 
-  const calculateEmission = () => {
-    const litres = Number(usage);
+  const updateEstimate = (value) => {
+    const litres = Number(value);
 
-    if (!litres || litres <= 0) {
-      alert("Please enter a valid water usage.");
+    if (!value || litres <= 0) {
+      setEstimatedEmission(null);
       return;
     }
 
-    try {
-      const result = calculateWaterEmission(litres);
-
-      setEmission(result.emission);
-      setSaved(false);
-    } catch (error) {
-      alert(error.message);
-    }
+    const result = calculateWaterEmission(litres);
+    setEstimatedEmission(result.emission);
   };
 
-  const saveActivity = () => {
-    if (emission === null) {
-      alert("Please calculate the emission first.");
+  const handleSave = async () => {
+    const litres = Number(quantity);
+
+    if (!waterType) {
+      setError("Please select a water type.");
       return;
     }
 
-    const result = calculateWaterEmission(Number(usage));
+    if (!quantity || litres <= 0) {
+      setError("Please enter a valid water quantity.");
+      return;
+    }
 
-    addActivity({
-      category: "Water",
-      activityType: "Water Consumption",
-      quantity: Number(usage),
-      unit: "litres",
-      emission: result.emission,
-      emissionFactor: result.factor,
-      emissionFactorUnit: result.factorUnit,
-      factorSource: result.source,
-      factorRegion: result.region,
-      factorYear: result.year,
-      calculationBoundary: result.boundary,
-      details: `${usage} litres water`,
-    });
+    setSaving(true);
+    setError("");
+    setMessage("");
 
-    setSaved(true);
+    try {
+      await addActivity({
+        category: "WATER",
+        activityType: waterType,
+        quantity: litres,
+        unit: "L",
+        details: details || `${waterType} water use`,
+      });
+
+      const result = calculateWaterEmission(litres);
+      setEstimatedEmission(result.emission);
+      setSaved(true);
+      setMessage("Water activity saved successfully!");
+      setWaterType("");
+      setQuantity("");
+      setDetails("");
+    } catch (err) {
+      console.error("Water activity save failed:", err);
+      setError(err.message || "Failed to save water activity.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
     <div className="tracking-page">
-
       <div className="tracking-header">
-
         <div className="tracking-icon">
           <Droplets size={25} />
         </div>
 
         <div>
           <span>TRACK</span>
-
-          <h1>
-            Water Consumption
-          </h1>
-
-          <p>
-            Track your daily water consumption.
-          </p>
+          <h1>Water Usage</h1>
+          <p>Track your household water consumption and understand its impact.</p>
         </div>
-
       </div>
 
       <div className="tracking-card">
-
         <div className="form-group">
-
-          <label>
-            Daily Water Usage
-          </label>
-
-          <input
-            type="number"
-            min="0"
-            placeholder="Enter water usage in litres"
-            value={usage}
+          <label htmlFor="waterType">Water Type</label>
+          <select
+            id="waterType"
+            value={waterType}
             onChange={(e) => {
-              setUsage(e.target.value);
-              setEmission(null);
+              setWaterType(e.target.value);
+              setError("");
               setSaved(false);
+              setMessage("");
             }}
-          />
-
-          <small>
-            Example: 150 litres
-          </small>
-
+          >
+            <option value="">Select Water Type</option>
+            {WATER_TYPES.map((type) => (
+              <option key={type.value} value={type.value}>
+                {type.label}
+              </option>
+            ))}
+          </select>
         </div>
 
-        <button
-          className="calculate-button"
-          onClick={calculateEmission}
-        >
-          <Calculator
-            size={14}
-            style={{
-              marginRight: 6,
-              verticalAlign: "middle",
+        <div className="form-group" style={{ marginTop: 15 }}>
+          <label htmlFor="quantity">Water Quantity</label>
+          <input
+            id="quantity"
+            type="number"
+            min="0"
+            step="0.1"
+            placeholder="Enter quantity in litres"
+            value={quantity}
+            onChange={(e) => {
+              const nextValue = e.target.value;
+              setQuantity(nextValue);
+              setError("");
+              setSaved(false);
+              setMessage("");
+              updateEstimate(nextValue);
             }}
           />
+          <small>Example: 80 L</small>
+        </div>
 
-          Calculate CO₂
-        </button>
+        <div className="form-group" style={{ marginTop: 15 }}>
+          <label htmlFor="details">Details (Optional)</label>
+          <textarea
+            id="details"
+            rows="4"
+            placeholder="Add any additional information..."
+            value={details}
+            onChange={(e) => setDetails(e.target.value)}
+          />
+        </div>
 
-        {emission !== null && (
+        {error && <div className="error-message">{error}</div>}
+        {message && <div className="success-message">{message}</div>}
+
+        {estimatedEmission !== null && (
           <div className="calculation-result">
-
-            <span>
-              Estimated Carbon Emission
-            </span>
-
-            <strong>
-              {emission} kg CO₂
-            </strong>
-
+            <span>Estimated Carbon Emission</span>
+            <strong>{estimatedEmission.toFixed(4)} kg CO₂</strong>
             <small>
-              Based on {usage} litres of water consumption
+              Based on {quantity} L of {WATER_TYPES.find((type) => type.value === waterType)?.label || "water"}
             </small>
-
           </div>
         )}
 
-        {emission !== null && (
-          <button
-            className="save-activity-button"
-            onClick={saveActivity}
-            disabled={saved}
-          >
-            <CheckCircle size={15} />
-
-            {saved
-              ? "Activity Saved"
-              : "Save Activity"}
-          </button>
-        )}
-
+        <button
+          className="save-activity-button"
+          onClick={handleSave}
+          disabled={saving || saved}
+        >
+          <CheckCircle size={15} />
+          {saving ? "Saving..." : saved ? "Activity Saved" : "Save Activity"}
+        </button>
       </div>
-
     </div>
   );
 }

@@ -129,8 +129,71 @@ public class EmissionFactorSeeder implements CommandLineRunner {
 
         addIfMissing(
                 "WATER",
-                "TAP_WATER",
+                "DRINKING_WATER",
                 0.0003,
+                "kgCO2e/L"
+        );
+
+        addIfMissing(
+                "WATER",
+                "SHOWER_BATH",
+                0.0003,
+                "kgCO2e/L"
+        );
+
+        addIfMissing(
+                "WATER",
+                "TOILET_FLUSHING",
+                0.0003,
+                "kgCO2e/L"
+        );
+
+        addIfMissing(
+                "WATER",
+                "LAUNDRY",
+                0.0003,
+                "kgCO2e/L"
+        );
+
+        addIfMissing(
+                "WATER",
+                "DISHWASHING",
+                0.0003,
+                "kgCO2e/L"
+        );
+
+        addIfMissing(
+                "WATER",
+                "GARDENING",
+                0.0003,
+                "kgCO2e/L"
+        );
+
+        addIfMissing(
+                "WATER",
+                "CAR_WASHING",
+                0.0003,
+                "kgCO2e/L"
+        );
+
+        addIfMissing(
+                "WATER",
+                "HOUSE_CLEANING",
+                0.0003,
+                "kgCO2e/L"
+        );
+
+        addIfMissing(
+                "WATER",
+                "COOKING",
+                0.0003,
+                "kgCO2e/L"
+        );
+
+        addIfMissing(
+                "WATER",
+                "RAINWATER_REUSED",
+                0.0001,
                 "kgCO2e/L"
         );
 

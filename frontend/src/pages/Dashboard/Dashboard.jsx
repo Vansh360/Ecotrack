@@ -1104,6 +1104,3 @@ function MetricCard({
 
   );
 }
-
-
-

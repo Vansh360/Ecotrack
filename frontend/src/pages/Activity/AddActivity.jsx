@@ -124,11 +124,16 @@ const activityTypesByCategory = {
   ],
 
   Water: [
-    {
-      value: "TAP_WATER",
-      label: "Tap water",
-      factor: 0.0003,
-    },
+    { value: "DRINKING_WATER", label: "Drinking Water", factor: 0.0003 },
+    { value: "SHOWER_BATH", label: "Shower / Bath", factor: 0.0003 },
+    { value: "TOILET_FLUSHING", label: "Toilet Flushing", factor: 0.0003 },
+    { value: "LAUNDRY", label: "Laundry", factor: 0.0003 },
+    { value: "DISHWASHING", label: "Dishwashing", factor: 0.0003 },
+    { value: "GARDENING", label: "Gardening & Plants", factor: 0.0003 },
+    { value: "CAR_WASHING", label: "Car Washing", factor: 0.0003 },
+    { value: "HOUSE_CLEANING", label: "House Cleaning", factor: 0.0003 },
+    { value: "COOKING", label: "Cooking", factor: 0.0003 },
+    { value: "RAINWATER_REUSED", label: "Rainwater / Reused Water", factor: 0.0001 },
   ],
 };
 
@@ -142,7 +147,7 @@ const defaultUnitFor = {
   Electricity: "kWh",
   Food: "servings",
   Waste: "kg",
-  Water: "litres",
+  Water: "L",
 };
 
 
