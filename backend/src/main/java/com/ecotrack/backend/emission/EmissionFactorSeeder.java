@@ -96,29 +96,85 @@ public class EmissionFactorSeeder implements CommandLineRunner {
 
         addIfMissing(
                 "WASTE",
-                "PLASTIC",
-                1.8,
+                "GENERAL_WASTE",
+                1.5,
                 "kgCO2e/kg"
         );
 
         addIfMissing(
                 "WASTE",
-                "PAPER",
-                1.0,
+                "FOOD_WASTE",
+                0.8,
                 "kgCO2e/kg"
         );
 
         addIfMissing(
                 "WASTE",
-                "GLASS",
+                "PLASTIC_WASTE",
+                2.5,
+                "kgCO2e/kg"
+        );
+
+        addIfMissing(
+                "WASTE",
+                "PAPER_WASTE",
+                1.3,
+                "kgCO2e/kg"
+        );
+
+        addIfMissing(
+                "WASTE",
+                "GLASS_WASTE",
                 0.5,
                 "kgCO2e/kg"
         );
 
         addIfMissing(
                 "WASTE",
-                "ORGANIC",
+                "METAL_WASTE",
+                1.2,
+                "kgCO2e/kg"
+        );
+
+        addIfMissing(
+                "WASTE",
+                "E_WASTE",
+                1.8,
+                "kgCO2e/kg"
+        );
+
+        addIfMissing(
+                "WASTE",
+                "TEXTILE_WASTE",
+                1.4,
+                "kgCO2e/kg"
+        );
+
+        addIfMissing(
+                "WASTE",
+                "ORGANIC_WASTE",
                 0.4,
+                "kgCO2e/kg"
+        );
+
+        addIfMissing(
+                "WASTE",
+                "HAZARDOUS_WASTE",
+                2.4,
+                "kgCO2e/kg"
+        );
+
+        addIfMissing(
+                "WASTE",
+                "MEDICAL_WASTE",
+                2.1,
+                "kgCO2e/kg"
+        );
+
+        addIfMissing(
+                "WASTE",
+                "CONSTRUCTION_WASTE",
+                1.7,
                 "kgCO2e/kg"
         );
 

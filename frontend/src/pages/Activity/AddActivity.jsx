@@ -101,26 +101,18 @@ const activityTypesByCategory = {
   ],
 
   Waste: [
-    {
-      value: "PLASTIC",
-      label: "Plastic",
-      factor: 1.8,
-    },
-    {
-      value: "PAPER",
-      label: "Paper",
-      factor: 1.0,
-    },
-    {
-      value: "GLASS",
-      label: "Glass",
-      factor: 0.5,
-    },
-    {
-      value: "ORGANIC",
-      label: "Organic",
-      factor: 0.4,
-    },
+    { value: "GENERAL_WASTE", label: "General Household Waste", factor: 1.5 },
+    { value: "FOOD_WASTE", label: "Food Waste", factor: 0.8 },
+    { value: "PLASTIC_WASTE", label: "Plastic Waste", factor: 2.5 },
+    { value: "PAPER_WASTE", label: "Paper & Cardboard", factor: 1.3 },
+    { value: "GLASS_WASTE", label: "Glass Waste", factor: 0.5 },
+    { value: "METAL_WASTE", label: "Metal / Cans", factor: 1.2 },
+    { value: "E_WASTE", label: "Electronic Waste", factor: 1.8 },
+    { value: "TEXTILE_WASTE", label: "Clothes & Textile Waste", factor: 1.4 },
+    { value: "ORGANIC_WASTE", label: "Organic / Garden Waste", factor: 0.4 },
+    { value: "HAZARDOUS_WASTE", label: "Hazardous Waste", factor: 2.4 },
+    { value: "MEDICAL_WASTE", label: "Medical Waste", factor: 2.1 },
+    { value: "CONSTRUCTION_WASTE", label: "Construction Waste", factor: 1.7 },
   ],
 
   Water: [
