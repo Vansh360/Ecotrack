@@ -1,18 +1,49 @@
 import { EMISSION_FACTORS } from "./emissionFactors";
 
 /*
- * Round emission value
+ * ============================================================
+ * EcoTrack Carbon Calculator
+ * ============================================================
+ *
+ * General formula:
+ *
+ * CO2e = Activity Data × Emission Factor
+ *
+ * IMPORTANT:
+ * Transportation factors from the current registry are
+ * primarily distance-based (kg CO2e/km).
+ *
+ * Therefore car/bike/flight calculations use:
+ *
+ * CO2e = Distance × Factor
+ *
+ * Frequency can scale the activity when the user selects
+ * Daily or Weekly.
+ *
+ * Passenger count is used for factors expressed as
+ * kg CO2e/person/km, such as bus and train.
  */
+
+
+/*
+ * ============================================================
+ * ROUNDING
+ * ============================================================
+ */
+
 export function roundEmission(value, decimals = 3) {
-  return Number(Number(value).toFixed(decimals));
+  return Number(
+    Number(value || 0).toFixed(decimals)
+  );
 }
 
 
 /*
- * Generic calculation
- *
- * CO2e = Activity × Emission Factor
+ * ============================================================
+ * GENERIC EMISSION CALCULATION
+ * ============================================================
  */
+
 export function calculateEmission(
   activityValue,
   emissionFactor
@@ -31,21 +62,23 @@ export function calculateEmission(
     );
   }
 
-  return roundEmission(activity * factor);
+  return roundEmission(
+    activity * factor
+  );
 }
 
 
 /*
- * Convert travel frequency into number of trips.
+ * ============================================================
+ * FREQUENCY
+ * ============================================================
  *
- * One Time  -> 1
- * Daily     -> 30
- * Weekly    -> 4
- * Monthly   -> 1
- *
- * This assumes the entered distance is the distance
- * for one travel occurrence.
+ * One Time = 1
+ * Daily    = 30
+ * Weekly   = 4
+ * Monthly  = 1
  */
+
 function getFrequencyMultiplier(frequency) {
   const normalized =
     String(frequency || "One Time")
@@ -70,22 +103,16 @@ function getFrequencyMultiplier(frequency) {
 
 
 /*
- * Transportation
- *
- * Fuel vehicles:
- *
- * Fuel consumed = Distance / Fuel Efficiency
- *
- * Emission = Fuel consumed × Fuel emission factor
- *
- * For public transport such as bus/train/flight,
- * the existing distance-based factor is retained.
+ * ============================================================
+ * TRANSPORTATION
+ * ============================================================
  */
+
 export function calculateTransportationEmission({
   vehicle,
   fuel = "Petrol",
   distance,
-  efficiency,
+  efficiency = "",
   frequency = "One Time",
   passengers = 1,
   chargingSource = "Grid",
@@ -132,104 +159,59 @@ export function calculateTransportationEmission({
   const multiplier =
     getFrequencyMultiplier(frequency);
 
-  let factor;
+  const totalDistance =
+    km * multiplier;
+
+  let factor = null;
 
   /*
-   * =========================================
-   * ELECTRIC VEHICLE
-   * =========================================
+   * ==========================================================
+   * CAR
+   * ==========================================================
    *
-   * The current EMISSION_FACTORS structure
-   * must contain an electric factor before
-   * this option can be used.
+   * Reference factor:
+   *
+   * 0.174 kg CO2e/km
+   *
+   * Formula:
+   *
+   * Distance × Factor
+   *
+   * Example:
+   *
+   * 34 × 0.174 = 5.916 kg CO2e
    */
+
   if (
-    normalizedVehicle === "electric" ||
-    normalizedVehicle === "electric vehicle"
+    normalizedVehicle === "car"
   ) {
-    const electricFactors =
+    factor =
       EMISSION_FACTORS
         .transportation
-        .electric;
-
-    if (!electricFactors) {
-      throw new Error(
-        "Electric vehicle emission factor is not available."
-      );
-    }
-
-    /*
-     * Currently use grid factor by default.
-     *
-     * If your emissionFactors.js later contains:
-     *
-     * electric: {
-     *   grid: {...},
-     *   solar: {...},
-     *   wind: {...}
-     * }
-     *
-     * this section can select the correct factor.
-     */
-    const sourceKey =
-      String(chargingSource || "Grid")
-        .toLowerCase()
-        .replace(/\s+/g, "");
-
-    factor =
-      electricFactors[sourceKey] ||
-      electricFactors.grid ||
-      electricFactors.default;
+        .car?.[
+          normalizedFuel
+        ];
 
     if (!factor) {
       throw new Error(
-        "Electric vehicle emission factor is not available."
+        `Emission factor not available for Car using ${fuel}.`
       );
     }
-
-    /*
-     * For EV, distance alone is not enough.
-     *
-     * Efficiency is interpreted as:
-     *
-     * km per kWh
-     *
-     * Energy consumed = distance / efficiency
-     */
-    const evEfficiency =
-      Number(efficiency);
-
-    if (
-      !Number.isFinite(evEfficiency) ||
-      evEfficiency <= 0
-    ) {
-      throw new Error(
-        "Please enter valid EV efficiency in km/kWh."
-      );
-    }
-
-    const totalDistance =
-      km * multiplier;
-
-    const energyConsumed =
-      totalDistance / evEfficiency;
 
     const totalEmission =
       calculateEmission(
-        energyConsumed,
+        totalDistance,
         factor.value
-      );
-
-    const perPersonEmission =
-      roundEmission(
-        totalEmission /
-          passengerCount
       );
 
     return {
       emission: totalEmission,
 
-      perPersonEmission,
+      perPersonEmission:
+        roundEmission(
+          totalEmission /
+          passengerCount
+        ),
 
       factor: factor.value,
 
@@ -247,219 +229,110 @@ export function calculateTransportationEmission({
       boundary: factor.boundary,
 
       totalDistance,
-
-      energyConsumed,
 
       fuelConsumed: null,
-
-      frequency,
-
-      passengers: passengerCount,
-    };
-  }
-
-
-  /*
-   * =========================================
-   * CAR / BIKE / SUV / VAN / AUTO / TRUCK
-   * =========================================
-   *
-   * These use fuel efficiency.
-   */
-  if (
-    normalizedVehicle === "car" ||
-    normalizedVehicle === "bike" ||
-    normalizedVehicle === "suv" ||
-    normalizedVehicle === "van" ||
-    normalizedVehicle === "auto rickshaw" ||
-    normalizedVehicle === "truck"
-  ) {
-    /*
-     * Car has fuel-specific factors.
-     */
-    if (
-      normalizedVehicle === "car"
-    ) {
-      factor =
-        EMISSION_FACTORS
-          .transportation
-          .car[
-            normalizedFuel
-          ];
-    }
-
-    /*
-     * Bike currently uses petrol factor.
-     *
-     * If your emissionFactors.js contains
-     * diesel/CNG bike factors later, they can
-     * be added here.
-     */
-    else if (
-      normalizedVehicle === "bike"
-    ) {
-      factor =
-        EMISSION_FACTORS
-          .transportation
-          .bike[
-            normalizedFuel
-          ] ||
-        EMISSION_FACTORS
-          .transportation
-          .bike
-          .petrol;
-    }
-
-    /*
-     * Other vehicle types use their respective
-     * factor if available.
-     */
-    else if (
-      normalizedVehicle === "suv"
-    ) {
-      factor =
-        EMISSION_FACTORS
-          .transportation
-          .suv?.[
-            normalizedFuel
-          ] ||
-        EMISSION_FACTORS
-          .transportation
-          .car?.[
-            normalizedFuel
-          ];
-    }
-
-    else if (
-      normalizedVehicle === "van"
-    ) {
-      factor =
-        EMISSION_FACTORS
-          .transportation
-          .van?.[
-            normalizedFuel
-          ] ||
-        EMISSION_FACTORS
-          .transportation
-          .car?.[
-            normalizedFuel
-          ];
-    }
-
-    else if (
-      normalizedVehicle === "auto rickshaw"
-    ) {
-      factor =
-        EMISSION_FACTORS
-          .transportation
-          .autoRickshaw?.[
-            normalizedFuel
-          ];
-    }
-
-    else if (
-      normalizedVehicle === "truck"
-    ) {
-      factor =
-        EMISSION_FACTORS
-          .transportation
-          .truck?.[
-            normalizedFuel
-          ];
-    }
-
-    if (!factor) {
-      throw new Error(
-        `Emission factor not available for ${vehicle} using ${fuel}.`
-      );
-    }
-
-    /*
-     * Fuel efficiency is required.
-     *
-     * Example:
-     *
-     * Distance = 100 km
-     * Efficiency = 15 km/L
-     *
-     * Fuel = 100 / 15
-     *      = 6.667 L
-     */
-    const fuelEfficiency =
-      Number(efficiency);
-
-    if (
-      !Number.isFinite(fuelEfficiency) ||
-      fuelEfficiency <= 0
-    ) {
-      throw new Error(
-        "Please enter valid fuel efficiency in km/L."
-      );
-    }
-
-    const totalDistance =
-      km * multiplier;
-
-    const fuelConsumed =
-      totalDistance /
-      fuelEfficiency;
-
-    /*
-     * Calculate total vehicle emission.
-     */
-    const totalEmission =
-      calculateEmission(
-        fuelConsumed,
-        factor.value
-      );
-
-    /*
-     * Calculate per-person emission.
-     */
-    const perPersonEmission =
-      roundEmission(
-        totalEmission /
-          passengerCount
-      );
-
-    return {
-      emission: totalEmission,
-
-      perPersonEmission,
-
-      factor: factor.value,
-
-      factorUnit: factor.unit,
-
-      activityUnit:
-        factor.activityUnit,
-
-      source: factor.source,
-
-      region: factor.region,
-
-      year: factor.year,
-
-      boundary: factor.boundary,
-
-      totalDistance,
-
-      fuelConsumed,
 
       energyConsumed: null,
 
       frequency,
 
       passengers: passengerCount,
+
+      efficiency:
+        efficiency
+          ? Number(efficiency)
+          : null,
     };
   }
 
 
   /*
-   * =========================================
-   * BUS
-   * =========================================
+   * ==========================================================
+   * BIKE
+   * ==========================================================
    */
+
+  if (
+    normalizedVehicle === "bike"
+  ) {
+    factor =
+      EMISSION_FACTORS
+        .transportation
+        .bike?.[
+          normalizedFuel
+        ] ||
+      EMISSION_FACTORS
+        .transportation
+        .bike?.petrol;
+
+    if (!factor) {
+      throw new Error(
+        `Emission factor not available for Bike using ${fuel}.`
+      );
+    }
+
+    const totalEmission =
+      calculateEmission(
+        totalDistance,
+        factor.value
+      );
+
+    return {
+      emission: totalEmission,
+
+      perPersonEmission:
+        roundEmission(
+          totalEmission /
+          passengerCount
+        ),
+
+      factor: factor.value,
+
+      factorUnit: factor.unit,
+
+      activityUnit:
+        factor.activityUnit,
+
+      source: factor.source,
+
+      region: factor.region,
+
+      year: factor.year,
+
+      boundary: factor.boundary,
+
+      totalDistance,
+
+      fuelConsumed: null,
+
+      energyConsumed: null,
+
+      frequency,
+
+      passengers: passengerCount,
+
+      efficiency:
+        efficiency
+          ? Number(efficiency)
+          : null,
+    };
+  }
+
+
+  /*
+   * ==========================================================
+   * BUS
+   * ==========================================================
+   *
+   * Factor is:
+   *
+   * kg CO2e / person / km
+   *
+   * Therefore:
+   *
+   * Distance × Passengers × Factor
+   */
+
   if (
     normalizedVehicle === "bus"
   ) {
@@ -475,25 +348,21 @@ export function calculateTransportationEmission({
       );
     }
 
-    const totalDistance =
-      km * multiplier;
-
     const totalEmission =
       calculateEmission(
-        totalDistance,
+        totalDistance *
+        passengerCount,
         factor.value
-      );
-
-    const perPersonEmission =
-      roundEmission(
-        totalEmission /
-          passengerCount
       );
 
     return {
       emission: totalEmission,
 
-      perPersonEmission,
+      perPersonEmission:
+        roundEmission(
+          totalEmission /
+          passengerCount
+        ),
 
       factor: factor.value,
 
@@ -519,15 +388,22 @@ export function calculateTransportationEmission({
       frequency,
 
       passengers: passengerCount,
+
+      efficiency: null,
     };
   }
 
 
   /*
-   * =========================================
+   * ==========================================================
    * TRAIN
-   * =========================================
+   * ==========================================================
+   *
+   * Default factor:
+   *
+   * 0.035 kg CO2e/person/km
    */
+
   if (
     normalizedVehicle === "train"
   ) {
@@ -543,25 +419,21 @@ export function calculateTransportationEmission({
       );
     }
 
-    const totalDistance =
-      km * multiplier;
-
     const totalEmission =
       calculateEmission(
-        totalDistance,
+        totalDistance *
+        passengerCount,
         factor.value
-      );
-
-    const perPersonEmission =
-      roundEmission(
-        totalEmission /
-          passengerCount
       );
 
     return {
       emission: totalEmission,
 
-      perPersonEmission,
+      perPersonEmission:
+        roundEmission(
+          totalEmission /
+          passengerCount
+        ),
 
       factor: factor.value,
 
@@ -587,15 +459,18 @@ export function calculateTransportationEmission({
       frequency,
 
       passengers: passengerCount,
+
+      efficiency: null,
     };
   }
 
 
   /*
-   * =========================================
+   * ==========================================================
    * FLIGHT
-   * =========================================
+   * ==========================================================
    */
+
   if (
     normalizedVehicle === "flight"
   ) {
@@ -611,25 +486,20 @@ export function calculateTransportationEmission({
       );
     }
 
-    const totalDistance =
-      km * multiplier;
-
     const totalEmission =
       calculateEmission(
         totalDistance,
         factor.value
       );
 
-    const perPersonEmission =
-      roundEmission(
-        totalEmission /
-          passengerCount
-      );
-
     return {
       emission: totalEmission,
 
-      perPersonEmission,
+      perPersonEmission:
+        roundEmission(
+          totalEmission /
+          passengerCount
+        ),
 
       factor: factor.value,
 
@@ -655,14 +525,118 @@ export function calculateTransportationEmission({
       frequency,
 
       passengers: passengerCount,
+
+      efficiency: null,
     };
   }
 
 
   /*
-   * =========================================
-   * UNSUPPORTED
-   * =========================================
+   * ==========================================================
+   * ELECTRIC VEHICLE
+   * ==========================================================
+   *
+   * No validated EV factor is currently present in the
+   * emission-factor registry.
+   *
+   * Therefore we explicitly stop instead of inventing
+   * an emission factor.
+   */
+
+  if (
+    normalizedVehicle === "electric" ||
+    normalizedVehicle === "electric vehicle"
+  ) {
+    throw new Error(
+      "Electric vehicle emission factor is not configured yet."
+    );
+  }
+
+
+  /*
+   * ==========================================================
+   * OTHER VEHICLES
+   * ==========================================================
+   *
+   * SUV / Van / Auto Rickshaw / Truck
+   *
+   * Use car factor as a temporary fallback only when
+   * a dedicated factor does not exist.
+   */
+
+  if (
+    normalizedVehicle === "suv" ||
+    normalizedVehicle === "van" ||
+    normalizedVehicle === "auto rickshaw" ||
+    normalizedVehicle === "truck"
+  ) {
+    factor =
+      EMISSION_FACTORS
+        .transportation
+        .car?.[
+          normalizedFuel
+        ];
+
+    if (!factor) {
+      throw new Error(
+        `Emission factor not available for ${vehicle} using ${fuel}.`
+      );
+    }
+
+    const totalEmission =
+      calculateEmission(
+        totalDistance,
+        factor.value
+      );
+
+    return {
+      emission: totalEmission,
+
+      perPersonEmission:
+        roundEmission(
+          totalEmission /
+          passengerCount
+        ),
+
+      factor: factor.value,
+
+      factorUnit: factor.unit,
+
+      activityUnit:
+        factor.activityUnit,
+
+      source:
+        `${factor.source} - temporary vehicle fallback`,
+
+      region: factor.region,
+
+      year: factor.year,
+
+      boundary:
+        `${factor.boundary} - temporary vehicle fallback`,
+
+      totalDistance,
+
+      fuelConsumed: null,
+
+      energyConsumed: null,
+
+      frequency,
+
+      passengers: passengerCount,
+
+      efficiency:
+        efficiency
+          ? Number(efficiency)
+          : null,
+    };
+  }
+
+
+  /*
+   * ==========================================================
+   * UNSUPPORTED VEHICLE
+   * ==========================================================
    */
 
   throw new Error(
@@ -672,8 +646,11 @@ export function calculateTransportationEmission({
 
 
 /*
- * Electricity
+ * ============================================================
+ * ELECTRICITY
+ * ============================================================
  */
+
 export function calculateElectricityEmission(
   kwh
 ) {
@@ -682,49 +659,95 @@ export function calculateElectricityEmission(
       .electricity
       .grid;
 
+  if (!factor) {
+    throw new Error(
+      "Electricity emission factor not available."
+    );
+  }
+
   return {
-    emission: calculateEmission(
-      kwh,
-      factor.value
-    ),
+    emission:
+      calculateEmission(
+        kwh,
+        factor.value
+      ),
 
-    factor: factor.value,
+    factor:
+      factor.value,
 
-    factorUnit: factor.unit,
+    factorUnit:
+      factor.unit,
 
     activityUnit:
       factor.activityUnit,
 
-    source: factor.source,
+    source:
+      factor.source,
 
-    region: factor.region,
+    region:
+      factor.region,
 
-    year: factor.year,
+    year:
+      factor.year,
 
-    boundary: factor.boundary,
+    boundary:
+      factor.boundary,
   };
 }
 
 
 /*
- * Food
+ * ============================================================
+ * FOOD
+ * ============================================================
  */
+
 export function calculateFoodEmission({
   foodType,
   quantity,
 }) {
+  if (!foodType) {
+    throw new Error(
+      "Please select a food type."
+    );
+  }
+
+  const normalized =
+    String(foodType)
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, "");
+
+  const foodKeyMap = {
+    beef: "beef",
+    "lamb/mutton": "lambMutton",
+    lamb: "lambMutton",
+    mutton: "lambMutton",
+    pork: "pork",
+    chicken: "chicken",
+    eggs: "eggs",
+    egg: "eggs",
+    cheese: "cheese",
+    rice: "rice",
+    tofu: "tofu",
+    tomatoes: "tomatoes",
+    tomato: "tomatoes",
+    lentils: "lentilsPeas",
+    peas: "lentilsPeas",
+    potatoes: "potatoes",
+    potato: "potatoes",
+    vegan: "vegan",
+    vegetarian: "vegetarian",
+    fish: "fish",
+  };
+
   const key =
-    foodType
-      .replace(/\s+/g, "")
-      .charAt(0)
-      .toLowerCase() +
-    foodType
-      .replace(/\s+/g, "")
-      .slice(1);
+    foodKeyMap[normalized] ||
+    normalized;
 
   const factor =
     EMISSION_FACTORS
-      .food[key];
+      .food?.[key];
 
   if (!factor) {
     throw new Error(
@@ -733,50 +756,112 @@ export function calculateFoodEmission({
   }
 
   return {
-    emission: calculateEmission(
-      quantity,
-      factor.value
-    ),
+    emission:
+      calculateEmission(
+        quantity,
+        factor.value
+      ),
 
-    factor: factor.value,
+    factor:
+      factor.value,
 
-    factorUnit: factor.unit,
+    factorUnit:
+      factor.unit,
 
     activityUnit:
       factor.activityUnit,
 
-    source: factor.source,
+    source:
+      factor.source,
 
-    region: factor.region,
+    region:
+      factor.region,
 
-    year: factor.year,
+    year:
+      factor.year,
 
-    boundary: factor.boundary,
+    boundary:
+      factor.boundary,
   };
 }
 
 
 /*
- * Waste
+ * ============================================================
+ * WASTE
+ * ============================================================
  */
+
 export function calculateWasteEmission({
   wasteType,
   quantity,
 }) {
   const keyMap = {
-    Plastic: "plastic",
-    Paper: "paper",
-    "Food Waste": "foodWaste",
-    "General Waste": "generalWaste",
-    Recycling: "recycling",
+
+    Plastic:
+      "plastic",
+
+    Plastic_Waste:
+      "plastic",
+
+    PLASTIC_WASTE:
+      "plastic",
+
+    Paper:
+      "paper",
+
+    PAPER_WASTE:
+      "paper",
+
+    "Food Waste":
+      "foodWaste",
+
+    FOOD_WASTE:
+      "foodWaste",
+
+    "General Waste":
+      "generalWaste",
+
+    GENERAL_WASTE:
+      "generalWaste",
+
+    Recycling:
+      "recycling",
+
+    GLASS_WASTE:
+      "glassWaste",
+
+    METAL_WASTE:
+      "metalWaste",
+
+    E_WASTE:
+      "eWaste",
+
+    TEXTILE_WASTE:
+      "textileWaste",
+
+    ORGANIC_WASTE:
+      "organicWaste",
+
+    HAZARDOUS_WASTE:
+      "hazardousWaste",
+
+    MEDICAL_WASTE:
+      "medicalWaste",
+
+    CONSTRUCTION_WASTE:
+      "constructionWaste",
   };
 
   const key =
-    keyMap[wasteType];
+    keyMap[wasteType] ||
+    String(wasteType || "")
+      .toLowerCase()
+      .replace(/\s+/g, "");
 
   const factor =
     EMISSION_FACTORS
-      .waste[key];
+      .waste?.[key];
 
   if (!factor) {
     throw new Error(
@@ -785,32 +870,42 @@ export function calculateWasteEmission({
   }
 
   return {
-    emission: calculateEmission(
-      quantity,
-      factor.value
-    ),
+    emission:
+      calculateEmission(
+        quantity,
+        factor.value
+      ),
 
-    factor: factor.value,
+    factor:
+      factor.value,
 
-    factorUnit: factor.unit,
+    factorUnit:
+      factor.unit,
 
     activityUnit:
       factor.activityUnit,
 
-    source: factor.source,
+    source:
+      factor.source,
 
-    region: factor.region,
+    region:
+      factor.region,
 
-    year: factor.year,
+    year:
+      factor.year,
 
-    boundary: factor.boundary,
+    boundary:
+      factor.boundary,
   };
 }
 
 
 /*
- * Water
+ * ============================================================
+ * WATER
+ * ============================================================
  */
+
 export function calculateWaterEmission(
   litres
 ) {
@@ -819,25 +914,38 @@ export function calculateWaterEmission(
       .water
       .default;
 
+  if (!factor) {
+    throw new Error(
+      "Water emission factor not available."
+    );
+  }
+
   return {
-    emission: calculateEmission(
-      litres,
-      factor.value
-    ),
+    emission:
+      calculateEmission(
+        litres,
+        factor.value
+      ),
 
-    factor: factor.value,
+    factor:
+      factor.value,
 
-    factorUnit: factor.unit,
+    factorUnit:
+      factor.unit,
 
     activityUnit:
       factor.activityUnit,
 
-    source: factor.source,
+    source:
+      factor.source,
 
-    region: factor.region,
+    region:
+      factor.region,
 
-    year: factor.year,
+    year:
+      factor.year,
 
-    boundary: factor.boundary,
+    boundary:
+      factor.boundary,
   };
 }

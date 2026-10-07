@@ -20,6 +20,15 @@ export function getEmission(activity) {
   return Number(activity?.emission || 0);
 }
 
+export function getActivityDate(activity) {
+  return (
+    activity?.activityDate ||
+    activity?.date ||
+    activity?.createdAt ||
+    null
+  );
+}
+
 export function isSameMonth(date, referenceDate = new Date()) {
   if (!date) return false;
   const activityDate = new Date(date);
@@ -41,7 +50,7 @@ export function getPreviousMonthDate(referenceDate = new Date()) {
 export function getCurrentMonthEmission(activities, referenceDate = new Date()) {
   return roundNumber(
     activities
-      .filter((activity) => isSameMonth(activity.date, referenceDate))
+      .filter((activity) => isSameMonth(getActivityDate(activity), referenceDate))
       .reduce((total, activity) => total + getEmission(activity), 0)
   );
 }
@@ -50,7 +59,7 @@ export function getPreviousMonthEmission(activities, referenceDate = new Date())
   const previousMonth = getPreviousMonthDate(referenceDate);
   return roundNumber(
     activities
-      .filter((activity) => isSameMonth(activity.date, previousMonth))
+      .filter((activity) => isSameMonth(getActivityDate(activity), previousMonth))
       .reduce((total, activity) => total + getEmission(activity), 0)
   );
 }
@@ -83,7 +92,7 @@ export function getCategoryEmission(activities, category, options = {}) {
       .filter(
         (activity) =>
           activity.category === category &&
-          (!monthOnly || isSameMonth(activity.date, referenceDate))
+          (!monthOnly || isSameMonth(getActivityDate(activity), referenceDate))
       )
       .reduce((total, activity) => total + getEmission(activity), 0)
   );
@@ -118,7 +127,7 @@ export function getMonthlyEmissions(
       1
     );
     const emission = activities
-      .filter((activity) => isSameMonth(activity.date, date))
+      .filter((activity) => isSameMonth(getActivityDate(activity), date))
       .reduce((total, activity) => total + getEmission(activity), 0);
     months.push({
       month: date.toLocaleDateString("en-IN", { month: "short" }),
@@ -135,7 +144,7 @@ export function getMonthlyEmissions(
 export function getYearlyEmission(activities, referenceDate = new Date()) {
   return roundNumber(
     activities
-      .filter((activity) => isSameYear(activity.date, referenceDate))
+      .filter((activity) => isSameYear(getActivityDate(activity), referenceDate))
       .reduce((total, activity) => total + getEmission(activity), 0)
   );
 }
