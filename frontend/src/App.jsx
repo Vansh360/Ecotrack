@@ -15,7 +15,8 @@ import Waste from "./pages/Tracking/Waste";
 import Water from "./pages/Tracking/Water";
 
 import Goals from "./pages/Goals/Goals";
-import Advisor from "./pages/Advisor/Advisor";
+import CarbonSimulator from "./Simulator/CarbonSimulator";
+import Advisor from "./Advisor/Advisor";
 import Leaderboard from "./pages/Leaderboard/Leaderboard";
 import Profile from "./pages/Profile/Profile";
 
@@ -100,6 +101,11 @@ function App() {
           <Route
             path="/goals"
             element={<Goals />}
+          />
+
+          <Route
+            path="/simulator"
+            element={<CarbonSimulator />}
           />
 
           <Route

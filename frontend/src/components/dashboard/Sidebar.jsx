@@ -9,7 +9,8 @@ import {
   Recycle,
   Droplets,
   Target,
-  Sparkles,
+  ArrowRight,
+  Brain,
   Trophy,
   User,
 } from "lucide-react";
@@ -117,12 +118,20 @@ export default function Sidebar() {
           <span>Goals</span>
         </NavLink>
 
+        <NavLink
+          to="/simulator"
+          className="sidebar-link"
+        >
+          <ArrowRight size={18} />
+          <span>Carbon Simulator</span>
+        </NavLink>
+
 
         <NavLink
           to="/advisor"
           className="sidebar-link"
         >
-          <Sparkles size={17} />
+          <Brain size={18} />
           <span>AI Advisor</span>
         </NavLink>
 

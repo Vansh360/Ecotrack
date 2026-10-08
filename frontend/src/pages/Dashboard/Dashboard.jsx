@@ -27,6 +27,11 @@ import {
 
 import { useNavigate } from "react-router-dom";
 import { getActivities } from "../../services/activityService";
+import {
+  getCarbonHotspot,
+  getCarbonBudgetStatus,
+  getScoreLabel,
+} from "../../utils/sustainabilityEngine";
 
 
 // ==========================================
@@ -413,6 +418,17 @@ export default function Dashboard() {
           )
         )
       );
+
+  const currentEmission = totalEmission;
+  const carbonHotspot =
+    getCarbonHotspot(activities);
+  const carbonBudget =
+    getCarbonBudgetStatus(
+      currentEmission,
+      250
+    );
+  const scoreLabel =
+    getScoreLabel(sustainabilityScore);
     
 
 
@@ -540,7 +556,7 @@ export default function Dashboard() {
           title="Sustainability Score"
           value={sustainabilityScore}
           unit="/100"
-          description="Current performance"
+          description={scoreLabel}
         />
 
 
@@ -840,6 +856,102 @@ export default function Dashboard() {
               }
             )}
 
+          </div>
+
+        </div>
+
+      </div>
+
+      {/* CARBON INSIGHTS */}
+
+      <div className="dashboard-insights-grid">
+
+        <div className="dashboard-panel">
+
+          <div className="panel-header">
+            <div>
+              <h2>🔥 Carbon Hotspot</h2>
+              <p>Your highest emission source</p>
+            </div>
+          </div>
+
+          <div style={{ padding: "20px" }}>
+            <h3>{carbonHotspot.category}</h3>
+
+            <strong>
+              {carbonHotspot.emission} kg CO₂e
+            </strong>
+
+            <p>
+              {carbonHotspot.percentage}% of your total emissions
+            </p>
+
+            <p>
+              Focus on reducing this category first for the biggest
+              potential impact.
+            </p>
+          </div>
+
+        </div>
+
+        <div className="dashboard-panel">
+
+          <div className="panel-header">
+            <div>
+              <h2>🎯 Carbon Budget</h2>
+              <p>Monthly personal target</p>
+            </div>
+          </div>
+
+          <div style={{ padding: "20px" }}>
+            <div>
+              <strong>{carbonBudget.used}</strong>
+              {" / "}
+              {carbonBudget.budget}
+              {" kg CO₂e"}
+            </div>
+
+            <div
+              role="progressbar"
+              aria-label="Monthly carbon budget used"
+              aria-valuemin={0}
+              aria-valuemax={carbonBudget.budget}
+              aria-valuenow={Math.min(
+                carbonBudget.used,
+                carbonBudget.budget
+              )}
+              style={{
+                marginTop: "15px",
+                height: "12px",
+                borderRadius: "20px",
+                background: "#e5eee9",
+                overflow: "hidden",
+              }}
+            >
+              <div
+                style={{
+                  width: `${Math.min(
+                    carbonBudget.percentage,
+                    100
+                  )}%`,
+                  height: "100%",
+                  background:
+                    carbonBudget.status === "exceeded"
+                      ? "#dc2626"
+                      : carbonBudget.status === "warning"
+                      ? "#eab308"
+                      : "#16834b",
+                }}
+              />
+            </div>
+
+            <p style={{ marginTop: "12px" }}>
+              {carbonBudget.status === "exceeded"
+                ? "⚠️ Monthly carbon budget exceeded."
+                : carbonBudget.status === "warning"
+                ? "⚠️ You are approaching your carbon budget."
+                : `🌱 ${carbonBudget.remaining} kg CO₂e remaining.`}
+            </p>
           </div>
 
         </div>
