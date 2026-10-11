@@ -1,5 +1,5 @@
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -10,6 +10,10 @@ import {
 
 import { useActivities } from "../../context/ActivityContext";
 import { detectCarbonAnomalies } from "../../utils/anomalyDetector";
+import {
+  getAnomalyReviews,
+  saveAnomalyReview,
+} from "../../utils/anomalyReviewStorage";
 
 export default function AnomalyDetector() {
   const {
@@ -23,6 +27,35 @@ export default function AnomalyDetector() {
     () => detectCarbonAnomalies(activities),
     [activities]
   );
+
+  const [reviews, setReviews] = useState({});
+  const [reviewNotes, setReviewNotes] = useState({});
+
+  useEffect(() => {
+    setReviews(getAnomalyReviews());
+  }, []);
+
+  const handleReview = (activityId, status) => {
+    try {
+      const review = saveAnomalyReview(activityId, {
+        status,
+        note: reviewNotes[String(activityId)] || "",
+      });
+
+      setReviews((previous) => ({
+        ...previous,
+        [String(activityId)]: review,
+      }));
+    } catch (err) {
+      window.alert(err.message || "Unable to save review.");
+    }
+  };
+
+  const pendingCount = findings.filter(
+    (finding) => !reviews[String(finding.id)]
+  ).length;
+
+  const reviewedCount = findings.length - pendingCount;
 
   const highCount = findings.filter(
     (item) => item.severity === "HIGH"
@@ -108,9 +141,15 @@ export default function AnomalyDetector() {
         </article>
 
         <article className="anomaly-summary-card">
-          <ShieldCheck size={22} />
-          <span>Records to review</span>
-          <strong>{findings.length}</strong>
+          <AlertTriangle size={22} />
+          <span>Pending reviews</span>
+          <strong>{pendingCount}</strong>
+        </article>
+
+        <article className="anomaly-summary-card">
+          <CheckCircle2 size={22} />
+          <span>Reviewed findings</span>
+          <strong>{reviewedCount}</strong>
         </article>
       </div>
 
@@ -154,6 +193,12 @@ export default function AnomalyDetector() {
           <div className="anomaly-list">
             {findings.map((finding, index) => {
               const activity = finding.activity;
+              const review = reviews[String(finding.id)];
+              const statusLabels = {
+                VERIFIED: "Verified",
+                CORRECTED: "Corrected",
+                NOT_AN_ISSUE: "Not an issue",
+              };
 
               return (
                 <article
@@ -192,6 +237,63 @@ export default function AnomalyDetector() {
                     <strong>Recommended check</strong>
                     <p>{finding.action}</p>
                   </div>
+
+                  <label className="anomaly-review-label">
+                    Review notes
+                    <textarea
+                      rows={2}
+                      maxLength={500}
+                      placeholder="Explain what you checked or corrected..."
+                      value={
+                        reviewNotes[String(finding.id)] ??
+                        review?.note ??
+                        ""
+                      }
+                      onChange={(event) =>
+                        setReviewNotes((previous) => ({
+                          ...previous,
+                          [String(finding.id)]: event.target.value,
+                        }))
+                      }
+                    />
+                  </label>
+
+                  <div className="anomaly-review-actions">
+                    <button
+                      type="button"
+                      onClick={() => handleReview(finding.id, "VERIFIED")}
+                    >
+                      Verified
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleReview(finding.id, "CORRECTED")}
+                    >
+                      Corrected
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleReview(finding.id, "NOT_AN_ISSUE")
+                      }
+                    >
+                      Not an issue
+                    </button>
+                  </div>
+
+                  {review && (
+                    <div className="anomaly-review-status">
+                      <CheckCircle2 size={17} />
+                      <span>
+                        <strong>{statusLabels[review.status]}</strong>
+                        {" · "}
+                        Reviewed{" "}
+                        {new Date(review.reviewedAt).toLocaleString("en-IN")}
+                      </span>
+                    </div>
+                  )}
 
                   <small>
                     {formatDate(activity)} · Quantity:{" "}

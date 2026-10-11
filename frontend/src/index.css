@@ -6592,3 +6592,67 @@ a {
     flex-direction: column;
   }
 }
+
+
+
+.anomaly-review-label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 18px;
+  color: #355b43;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.anomaly-review-label textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px;
+  border: 1px solid #d5e3d9;
+  border-radius: 9px;
+  resize: vertical;
+  font: inherit;
+  font-weight: 400;
+}
+
+.anomaly-review-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 12px;
+}
+
+.anomaly-review-actions button {
+  padding: 9px 13px;
+  border: 1px solid #cfe0d4;
+  border-radius: 8px;
+  background: #fff;
+  color: #24553b;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.anomaly-review-actions button:hover {
+  background: #edf8f1;
+}
+
+.anomaly-review-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  color: #237747;
+  font-size: 12px;
+}
+
+@media (max-width: 600px) {
+  .anomaly-review-actions {
+    flex-direction: column;
+  }
+
+  .anomaly-review-actions button {
+    width: 100%;
+  }
+}
+
