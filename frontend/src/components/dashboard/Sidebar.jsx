@@ -11,6 +11,7 @@ import {
   Target,
   ArrowRight,
   Brain,
+  ShieldCheck,
   Trophy,
   User,
 } from "lucide-react";
@@ -124,6 +125,14 @@ export default function Sidebar() {
         >
           <Brain size={18} />
           <span>Carbon Digital Twin</span>
+        </NavLink>
+
+        <NavLink
+          to="/anomaly-detector"
+          className="sidebar-link"
+        >
+          <ShieldCheck size={18} />
+          <span>Anomaly Detector</span>
         </NavLink>
 
         <NavLink

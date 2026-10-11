@@ -16,6 +16,7 @@ import Water from "./pages/Tracking/Water";
 
 import Goals from "./pages/Goals/Goals";
 import DigitalTwin from "./pages/DigitalTwin/DigitalTwin";
+import AnomalyDetector from "./pages/AnomalyDetector/AnomalyDetector";
 import CarbonSimulator from "./Simulator/CarbonSimulator";
 import Advisor from "./Advisor/Advisor";
 import Leaderboard from "./pages/Leaderboard/Leaderboard";
@@ -107,6 +108,11 @@ function App() {
           <Route
             path="/digital-twin"
             element={<DigitalTwin />}
+          />
+
+          <Route
+            path="/anomaly-detector"
+            element={<AnomalyDetector />}
           />
 
           <Route
