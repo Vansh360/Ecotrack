@@ -1,3 +1,6 @@
+import { Card } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+
 export default function EmissionCard({
   icon,
   title,
@@ -6,38 +9,19 @@ export default function EmissionCard({
   description,
 }) {
   return (
-    <div className="emission-card">
-
-      <div className="emission-card-header">
-
-        <div className="emission-card-icon">
+    <Card className="gap-3 px-5 py-5">
+      <div className="flex items-center gap-3">
+        <div className="flex size-10 items-center justify-center rounded-xl border border-primary/20 bg-primary/10 text-primary">
           {icon}
         </div>
-
-        <div className="emission-card-info">
-          <strong>{title}</strong>
-
-          <span>{description}</span>
+        <div className="flex-1">
+          <strong className="block text-sm">{title}</strong>
+          <span className="text-xs text-muted-foreground">{description}</span>
         </div>
-
-        <strong className="emission-value">
-          {value} kg
-        </strong>
-
+        <strong className="font-display text-lg">{value} kg</strong>
       </div>
-
-      <div className="emission-progress">
-        <div
-          style={{
-            width: `${percentage}%`,
-          }}
-        />
-      </div>
-
-      <div className="emission-percentage">
-        {percentage}% of total emissions
-      </div>
-
-    </div>
+      <Progress value={percentage} />
+      <div className="text-xs text-muted-foreground">{percentage}% of total emissions</div>
+    </Card>
   );
 }

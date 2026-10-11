@@ -187,7 +187,7 @@ export default function Advisor() {
 
   return (
 
-    <div className="dashboard-page">
+    <div className="dashboard-page advisor-dashboard-page">
 
       {/* HEADER */}
 
@@ -232,17 +232,13 @@ export default function Advisor() {
 
       {advisorData && (
 
-        <div className="dashboard-metrics">
+        <div className="dashboard-metrics advisor-metrics">
 
           {/* CURRENT EMISSION */}
 
-          <div className="dashboard-panel">
+          <div className="dashboard-panel advisor-stat-card">
 
-            <div
-              style={{
-                padding: "22px",
-              }}
-            >
+            <div className="advisor-stat-content">
 
               <Leaf
                 size={24}
@@ -266,13 +262,9 @@ export default function Advisor() {
 
           {/* HOTSPOT */}
 
-          <div className="dashboard-panel">
+          <div className="dashboard-panel advisor-stat-card">
 
-            <div
-              style={{
-                padding: "22px",
-              }}
-            >
+            <div className="advisor-stat-content">
 
               <Target
                 size={24}
@@ -306,13 +298,9 @@ export default function Advisor() {
 
           {/* BUDGET */}
 
-          <div className="dashboard-panel">
+          <div className="dashboard-panel advisor-stat-card">
 
-            <div
-              style={{
-                padding: "22px",
-              }}
-            >
+            <div className="advisor-stat-content">
 
               <TrendingDown
                 size={24}
@@ -344,13 +332,9 @@ export default function Advisor() {
 
           {/* SAVING */}
 
-          <div className="dashboard-panel">
+          <div className="dashboard-panel advisor-stat-card">
 
-            <div
-              style={{
-                padding: "22px",
-              }}
-            >
+            <div className="advisor-stat-content">
 
               <Lightbulb
                 size={24}
@@ -384,21 +368,9 @@ export default function Advisor() {
 
       {advisorData && (
 
-        <div
-          className="dashboard-panel"
-          style={{
-            marginTop: "24px",
-          }}
-        >
+        <div className="dashboard-panel advisor-insight-panel">
 
-          <div
-            style={{
-              padding: "24px",
-              display: "flex",
-              gap: "16px",
-              alignItems: "flex-start",
-            }}
-          >
+          <div className="advisor-insight-content">
 
             <Brain
               size={30}
@@ -441,11 +413,7 @@ export default function Advisor() {
 
       {/* RECOMMENDATIONS */}
 
-      <div
-        style={{
-          marginTop: "24px",
-        }}
-      >
+      <div className="advisor-recommendations">
 
         <div className="panel-header">
 
@@ -465,15 +433,7 @@ export default function Advisor() {
         </div>
 
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns:
-              "repeat(auto-fit, minmax(280px, 1fr))",
-            gap: "18px",
-            marginTop: "16px",
-          }}
-        >
+        <div className="advisor-recommendation-grid">
 
           {advisorData?.recommendations
             ?.map(
@@ -486,39 +446,19 @@ export default function Advisor() {
                     recommendation.id
                   }
 
-                  className="dashboard-panel"
-
-                  style={{
-                    padding: "22px",
-                  }}
+                  className="dashboard-panel advisor-recommendation-card"
                 >
 
                   {/* ICON */}
 
-                  <div
-                    style={{
-                      fontSize: "30px",
-                      marginBottom:
-                        "12px",
-                    }}
-                  >
-                    {
-                      recommendation.icon
-                    }
-                  </div>
-
-
                   {/* PRIORITY */}
 
                   <span
-                    style={{
-                      fontSize:
-                        "12px",
-                      fontWeight:
-                        "700",
-                      letterSpacing:
-                        "0.05em",
-                    }}
+                    className={`advisor-priority ${
+                      recommendation.priority === "HIGH"
+                        ? "advisor-priority-high"
+                        : "advisor-priority-medium"
+                    }`}
                   >
 
                     {
@@ -530,12 +470,7 @@ export default function Advisor() {
                   </span>
 
 
-                  <h3
-                    style={{
-                      marginTop:
-                        "10px",
-                    }}
-                  >
+                  <h3 className="advisor-recommendation-title">
 
                     {
                       recommendation.title
@@ -554,18 +489,7 @@ export default function Advisor() {
 
                   {/* WHY */}
 
-                  <div
-                    style={{
-                      marginTop:
-                        "14px",
-                      padding:
-                        "12px",
-                      borderRadius:
-                        "10px",
-                      background:
-                        "#f4f8f5",
-                    }}
-                  >
+                  <div className="advisor-reason">
 
                     <strong>
                       Why this recommendation?
@@ -583,12 +507,7 @@ export default function Advisor() {
 
                   {/* SAVING */}
 
-                  <div
-                    style={{
-                      marginTop:
-                        "16px",
-                    }}
-                  >
+                  <div className="advisor-saving">
 
                     <span>
                       Estimated CO₂ saving
@@ -616,18 +535,7 @@ export default function Advisor() {
 
                   {/* ACTION */}
 
-                  <div
-                    style={{
-                      marginTop:
-                        "16px",
-                      padding:
-                        "12px",
-                      borderRadius:
-                        "10px",
-                      background:
-                        "#edf8f1",
-                    }}
-                  >
+                  <div className="advisor-action">
 
                     <strong>
                       Suggested action
@@ -657,13 +565,7 @@ export default function Advisor() {
       {advisorData?.recommendations
         ?.length === 0 && (
 
-        <div
-          className="dashboard-panel"
-          style={{
-            marginTop: "20px",
-            padding: "30px",
-          }}
-        >
+        <div className="dashboard-panel advisor-empty-state">
 
           <h3>
             🌱 Start tracking your

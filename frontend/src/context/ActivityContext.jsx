@@ -71,6 +71,17 @@ export function ActivityProvider({ children }) {
     loadActivities();
   }, [loadActivities]);
 
+  useEffect(() => {
+    const handleLogout = () => {
+      setActivities([]);
+      setError(null);
+      setLoading(false);
+    };
+
+    window.addEventListener("ecotrack:logout", handleLogout);
+    return () => window.removeEventListener("ecotrack:logout", handleLogout);
+  }, []);
+
   // =========================================
   // RELOAD AFTER LOGIN
   // =========================================

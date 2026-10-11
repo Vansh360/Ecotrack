@@ -6,8 +6,10 @@ import {
   Leaf,
   Users,
   Zap,
+  Info,
 } from "lucide-react";
 import { EMISSION_FACTORS } from "../../utils/emissionFactors";
+import { SelectNative } from "@/components/ui/select-native";
 
 const VEHICLES = [
   { value: "Car", label: "Car" },
@@ -202,118 +204,66 @@ export default function TransportationScenario() {
         <div className="transport-twin-form">
           <h3><Car size={18} /> Current journey</h3>
 
-          <label htmlFor="twin-current-vehicle">Vehicle</label>
-          <select
-            id="twin-current-vehicle"
-            value={vehicle}
-            onChange={(e) => updateVehicle(e.target.value)}
-          >
-            {VEHICLES.map((item) => (
-              <option key={item.value} value={item.value}>
-                {item.label}
-              </option>
-            ))}
-          </select>
+          <div className="transport-twin-field-grid">
+            <div className="transport-twin-field">
+              <label htmlFor="twin-current-vehicle">Vehicle</label>
+              <SelectNative id="twin-current-vehicle" value={vehicle} onChange={(e) => updateVehicle(e.target.value)}>
+                {VEHICLES.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
+              </SelectNative>
+            </div>
+            {FUEL_OPTIONS[vehicle] && (
+              <div className="transport-twin-field">
+                <label htmlFor="twin-current-fuel">Fuel</label>
+                <SelectNative id="twin-current-fuel" value={fuel} onChange={(e) => setFuel(e.target.value)}>
+                  {FUEL_OPTIONS[vehicle].map((item) => <option key={item} value={item}>{item.charAt(0).toUpperCase() + item.slice(1)}</option>)}
+                </SelectNative>
+              </div>
+            )}
+          </div>
 
-          {FUEL_OPTIONS[vehicle] && (
-            <>
-              <label htmlFor="twin-current-fuel">Fuel</label>
-              <select
-                id="twin-current-fuel"
-                value={fuel}
-                onChange={(e) => setFuel(e.target.value)}
-              >
-                {FUEL_OPTIONS[vehicle].map((item) => (
-                  <option key={item} value={item}>
-                    {item.charAt(0).toUpperCase() + item.slice(1)}
-                  </option>
-                ))}
-              </select>
-            </>
-          )}
+          <div className="transport-twin-field-grid">
+            <div className="transport-twin-field">
+              <label htmlFor="twin-distance">Distance per trip (km)</label>
+              <input id="twin-distance" type="number" min="0.1" step="0.1" value={distance} onChange={(e) => setDistance(e.target.value)} />
+            </div>
+            <div className="transport-twin-field">
+              <label htmlFor="twin-frequency">Frequency</label>
+              <SelectNative id="twin-frequency" value={frequency} onChange={(e) => setFrequency(e.target.value)}>
+                {FREQUENCIES.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
+              </SelectNative>
+            </div>
+          </div>
 
-          <label htmlFor="twin-distance">Distance per trip (km)</label>
-          <input
-            id="twin-distance"
-            type="number"
-            min="0.1"
-            step="0.1"
-            value={distance}
-            onChange={(e) => setDistance(e.target.value)}
-          />
-
-          <label htmlFor="twin-frequency">Frequency</label>
-          <select
-            id="twin-frequency"
-            value={frequency}
-            onChange={(e) => setFrequency(e.target.value)}
-          >
-            {FREQUENCIES.map((item) => (
-              <option key={item.value} value={item.value}>
-                {item.label}
-              </option>
-            ))}
-          </select>
-
-          <label htmlFor="twin-passengers">Passengers sharing the journey</label>
-          <input
-            id="twin-passengers"
-            type="number"
-            min="1"
-            max="100"
-            value={passengers}
-            onChange={(e) => setPassengers(e.target.value)}
-          />
-          <small>
-            The estimated vehicle emissions are divided by the passenger
-            count to show a per-person comparison.
-          </small>
+          <div className="transport-twin-field">
+            <label htmlFor="twin-passengers">Passengers sharing the journey</label>
+            <input id="twin-passengers" type="number" min="1" max="100" value={passengers} onChange={(e) => setPassengers(e.target.value)} />
+            <small>The estimated vehicle emissions are divided by the passenger count to show a per-person comparison.</small>
+          </div>
         </div>
 
         <div className="transport-twin-form">
           <h3><Leaf size={18} /> Greener alternative</h3>
 
-          <label htmlFor="twin-alternative-vehicle">Alternative vehicle</label>
-          <select
-            id="twin-alternative-vehicle"
-            value={alternativeVehicle}
-            onChange={(e) => updateVehicle(e.target.value, true)}
-          >
-            {VEHICLES.map((item) => (
-              <option key={item.value} value={item.value}>
-                {item.label}
-              </option>
-            ))}
-          </select>
+          <div className="transport-twin-field">
+            <label htmlFor="twin-alternative-vehicle">Alternative vehicle</label>
+            <SelectNative id="twin-alternative-vehicle" value={alternativeVehicle} onChange={(e) => updateVehicle(e.target.value, true)}>
+              {VEHICLES.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
+            </SelectNative>
+          </div>
 
           {FUEL_OPTIONS[alternativeVehicle] && (
-            <>
+            <div className="transport-twin-field">
               <label htmlFor="twin-alternative-fuel">Fuel</label>
-              <select
-                id="twin-alternative-fuel"
-                value={alternativeFuel}
-                onChange={(e) => setAlternativeFuel(e.target.value)}
-              >
-                {FUEL_OPTIONS[alternativeVehicle].map((item) => (
-                  <option key={item} value={item}>
-                    {item.charAt(0).toUpperCase() + item.slice(1)}
-                  </option>
-                ))}
-              </select>
-            </>
+              <SelectNative id="twin-alternative-fuel" value={alternativeFuel} onChange={(e) => setAlternativeFuel(e.target.value)}>
+                {FUEL_OPTIONS[alternativeVehicle].map((item) => <option key={item} value={item}>{item.charAt(0).toUpperCase() + item.slice(1)}</option>)}
+              </SelectNative>
+            </div>
           )}
 
-          <label htmlFor="twin-alternative-passengers">
-            Alternative passengers
-          </label>
-          <input
-            id="twin-alternative-passengers"
-            type="number"
-            min="1"
-            max="100"
-            value={alternativePassengers}
-            onChange={(e) => setAlternativePassengers(e.target.value)}
-          />
+          <div className="transport-twin-field">
+            <label htmlFor="twin-alternative-passengers">Alternative passengers</label>
+            <input id="twin-alternative-passengers" type="number" min="1" max="100" value={alternativePassengers} onChange={(e) => setAlternativePassengers(e.target.value)} />
+          </div>
 
           <div className="transport-twin-note">
             <Users size={18} />
@@ -374,13 +324,16 @@ export default function TransportationScenario() {
             </small>
           </div>
 
-          <p className="transport-twin-disclaimer">
-            Estimates use the configured EcoTrack factors. They are only
-            comparable when the factors have consistent units and
-            calculation boundaries. Public transport factors may represent
-            per-person kilometres; check each factor's unit before relying
-            on the comparison.
-          </p>
+          <div className="transport-twin-disclaimer">
+            <Info size={17} />
+            <p>
+              Estimates use the configured EcoTrack factors. They are only
+              comparable when the factors have consistent units and
+              calculation boundaries. Public transport factors may represent
+              per-person kilometres; check each factor's unit before relying
+              on the comparison.
+            </p>
+          </div>
         </div>
       )}
     </section>

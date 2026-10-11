@@ -1,3 +1,6 @@
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+
 export default function StatCard({
   icon,
   title,
@@ -7,38 +10,21 @@ export default function StatCard({
   trend,
 }) {
   return (
-    <div className="stat-card">
-
-      <div className="stat-card-top">
-
-        <div className="stat-card-icon">
+    <Card className="gap-3 px-5 py-5 transition-transform duration-300 hover:-translate-y-1">
+      <div className="flex items-start justify-between">
+        <div className="flex size-10 items-center justify-center rounded-xl border border-primary/20 bg-primary/10 text-primary">
           {icon}
         </div>
-
-        {trend && (
-          <span className="stat-trend">
-            {trend}
-          </span>
-        )}
-
+        {trend && <Badge variant="secondary">{trend}</Badge>}
       </div>
-
-      <span className="stat-card-title">
+      <span className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
         {title}
       </span>
-
-      <div className="stat-card-value">
+      <div className="font-display text-3xl font-semibold tracking-tight">
         {value}
-
-        {unit && (
-          <small>{unit}</small>
-        )}
+        {unit && <small className="ml-1 text-sm font-sans font-medium text-muted-foreground">{unit}</small>}
       </div>
-
-      {description && (
-        <p>{description}</p>
-      )}
-
-    </div>
+      {description && <p className="text-xs text-muted-foreground">{description}</p>}
+    </Card>
   );
 }

@@ -6,6 +6,7 @@ import {
 import {
   simulateEmissionChange,
 } from "../utils/sustainabilityEngine";
+import { SelectNative } from "@/components/ui/select-native";
 
 const OPTIONS = {
   Car: {
@@ -120,7 +121,7 @@ export default function CarbonSimulator() {
             Current Transport
           </label>
 
-          <select
+          <SelectNative
             value={currentMode}
             onChange={(e) =>
               setCurrentMode(
@@ -141,7 +142,7 @@ export default function CarbonSimulator() {
               🚆 Train
             </option>
 
-          </select>
+          </SelectNative>
 
         </div>
 
@@ -152,7 +153,7 @@ export default function CarbonSimulator() {
             Alternative Transport
           </label>
 
-          <select
+          <SelectNative
             value={alternativeMode}
             onChange={(e) =>
               setAlternativeMode(
@@ -173,7 +174,7 @@ export default function CarbonSimulator() {
               🚆 Train
             </option>
 
-          </select>
+          </SelectNative>
 
         </div>
 

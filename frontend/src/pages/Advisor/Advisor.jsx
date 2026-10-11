@@ -7,7 +7,6 @@ import {
   Zap,
   Utensils,
   Recycle,
-  Droplets,
   TrendingDown,
   Lightbulb,
   Target,

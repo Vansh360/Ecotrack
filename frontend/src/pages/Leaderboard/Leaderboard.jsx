@@ -1,10 +1,10 @@
 import {
   Trophy,
-  Medal,
   Leaf,
   TrendingDown,
   Users,
 } from "lucide-react";
+import { SelectNative } from "@/components/ui/select-native";
 
 export default function Leaderboard() {
   const users = [
@@ -113,7 +113,7 @@ export default function Leaderboard() {
 
         </div>
 
-        <select className="leaderboard-period">
+        <SelectNative className="leaderboard-period" defaultValue="This Month">
           <option>
             This Month
           </option>
@@ -121,7 +121,7 @@ export default function Leaderboard() {
           <option>
             This Year
           </option>
-        </select>
+        </SelectNative>
 
       </div>
 

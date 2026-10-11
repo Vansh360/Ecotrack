@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-  Leaf,
   Menu,
   X,
   LayoutDashboard,
@@ -10,163 +11,126 @@ import {
   Sparkles,
   Trophy,
 } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import BrandMark from "./BrandMark";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+
+const navLinks = [
+  { to: "/", label: "Home" },
+  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/goals", label: "Goals", icon: Target },
+  { to: "/advisor", label: "AI Advisor", icon: Sparkles },
+  { to: "/leaderboard", label: "Leaderboard", icon: Trophy },
+];
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
-
+  const [scrolled, setScrolled] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const closeMenu = () => {
-    setMenuOpen(false);
-  };
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const closeMenu = () => setMenuOpen(false);
 
   return (
-    <nav className="main-navbar">
-
-      {/* LOGO */}
-
-      <Link
-        to="/"
-        className="navbar-logo"
-        onClick={closeMenu}
-      >
-        <div className="navbar-logo-icon">
-          <Leaf size={20} />
-        </div>
-
-        <div>
-          <strong>EcoTrack</strong>
-          <span>Track. Reduce. Sustain.</span>
-        </div>
-      </Link>
-
-      {/* DESKTOP NAVIGATION */}
-
-      <div className="navbar-links">
-
-        <Link to="/">
-          Home
-        </Link>
-
-        <Link to="/dashboard">
-          <LayoutDashboard size={15} />
-          Dashboard
-        </Link>
-
-        <Link to="/goals">
-          <Target size={15} />
-          Goals
-        </Link>
-
-        <Link to="/advisor">
-          <Sparkles size={15} />
-          AI Advisor
-        </Link>
-
-        <Link to="/leaderboard">
-          <Trophy size={15} />
-          Leaderboard
-        </Link>
-
-      </div>
-
-      {/* DESKTOP AUTH */}
-
-      <div className="navbar-actions">
-
-        <button
-          className="navbar-login"
-          onClick={() => navigate("/login")}
-        >
-          <LogIn size={15} />
-          Login
-        </button>
-
-        <button
-          className="navbar-register"
-          onClick={() => navigate("/register")}
-        >
-          <UserPlus size={15} />
-          Get Started
-        </button>
-
-      </div>
-
-      {/* MOBILE BUTTON */}
-
-      <button
-        className="navbar-menu-button"
-        onClick={() => setMenuOpen(!menuOpen)}
-      >
-        {menuOpen ? (
-          <X size={22} />
-        ) : (
-          <Menu size={22} />
+    <>
+      <nav
+        className={cn(
+          "fixed inset-x-0 top-0 z-50 flex h-[78px] items-center justify-between px-5 transition-all md:px-10",
+          "border-b border-transparent backdrop-blur-xl",
+          scrolled && "border-border/70 bg-background/80 shadow-[0_12px_40px_-25px_oklch(0.22_0.035_155_/_0.45)]"
         )}
-      </button>
+      >
+        <BrandMark />
 
-      {/* MOBILE MENU */}
-
-      {menuOpen && (
-        <div className="mobile-navbar-menu">
-
-          <Link to="/" onClick={closeMenu}>
-            Home
-          </Link>
-
-          <Link
-            to="/dashboard"
-            onClick={closeMenu}
-          >
-            <LayoutDashboard size={15} />
-            Dashboard
-          </Link>
-
-          <Link
-            to="/goals"
-            onClick={closeMenu}
-          >
-            <Target size={15} />
-            Goals
-          </Link>
-
-          <Link
-            to="/advisor"
-            onClick={closeMenu}
-          >
-            <Sparkles size={15} />
-            AI Advisor
-          </Link>
-
-          <Link
-            to="/leaderboard"
-            onClick={closeMenu}
-          >
-            <Trophy size={15} />
-            Leaderboard
-          </Link>
-
-          <div className="mobile-navbar-divider" />
-
-          <Link
-            to="/login"
-            onClick={closeMenu}
-          >
-            Login
-          </Link>
-
-          <Link
-            to="/register"
-            onClick={closeMenu}
-            className="mobile-register"
-          >
-            Get Started
-          </Link>
-
+        <div className="hidden items-center gap-1 xl:flex">
+          {navLinks.map((link) => {
+            const Icon = link.icon;
+            const active = location.pathname === link.to;
+            return (
+              <Link
+                key={link.to}
+                to={link.to}
+                className={cn(
+                  "flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground",
+                  active && "bg-primary/10 text-primary"
+                )}
+              >
+                {Icon && <Icon size={14} />}
+                {link.label}
+              </Link>
+            );
+          })}
         </div>
-      )}
 
-    </nav>
+        <div className="hidden items-center gap-2 xl:flex">
+          <Button variant="outline" onClick={() => navigate("/login")}>
+            <LogIn size={14} />
+            Login
+          </Button>
+          <Button onClick={() => navigate("/register")}>
+            <UserPlus size={14} />
+            Get Started
+          </Button>
+        </div>
+
+        <Button
+          variant="outline"
+          size="icon"
+          className="xl:hidden"
+          onClick={() => setMenuOpen(!menuOpen)}
+          aria-label={menuOpen ? "Close menu" : "Open menu"}
+        >
+          {menuOpen ? <X size={18} /> : <Menu size={18} />}
+        </Button>
+      </nav>
+
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="fixed inset-x-0 top-[78px] z-40 border-b border-border bg-background/95 p-4 backdrop-blur-xl xl:hidden"
+          >
+            <div className="flex flex-col gap-1">
+              {navLinks.map((link) => {
+                const Icon = link.icon;
+                return (
+                  <Link
+                    key={link.to}
+                    to={link.to}
+                    onClick={closeMenu}
+                    className={cn(
+                      "flex items-center gap-2 rounded-lg px-4 py-3 text-sm text-muted-foreground",
+                      location.pathname === link.to && "bg-primary/10 text-primary"
+                    )}
+                  >
+                    {Icon && <Icon size={14} />}
+                    {link.label}
+                  </Link>
+                );
+              })}
+              <div className="my-2 h-px bg-border" />
+              <Link to="/login" onClick={closeMenu} className="rounded-lg px-4 py-3 text-sm">
+                Login
+              </Link>
+              <Link
+                to="/register"
+                onClick={closeMenu}
+                className="rounded-lg border border-primary/30 px-4 py-3 text-center text-sm font-semibold text-primary"
+              >
+                Get Started
+              </Link>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 }

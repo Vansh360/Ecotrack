@@ -1,173 +1,96 @@
-import {
-  Leaf,
-  Github,
-  Linkedin,
-  Mail,
-  ArrowUp,
-} from "lucide-react";
+import { Code2, BriefcaseBusiness, Mail, ArrowUp } from "lucide-react";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import BrandMark from "./BrandMark";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 
 export default function Footer() {
-  const scrollTop = () => {
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
-  };
+  const scrollTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
   return (
-    <footer className="main-footer">
-
-      <div className="footer-container">
-
-        {/* BRAND */}
-
-        <div className="footer-brand">
-
-          <Link to="/" className="footer-logo">
-
-            <div className="footer-logo-icon">
-              <Leaf size={19} />
-            </div>
-
-            <strong>
-              EcoTrack
-            </strong>
-
-          </Link>
-
-          <p>
-            An AI-powered platform that helps
-            individuals understand, track and
-            reduce their carbon footprint.
+    <footer className="mt-8 border-t border-border bg-card/40">
+      <div className="mx-auto grid max-w-6xl gap-10 px-6 py-16 md:grid-cols-4">
+        <div className="md:col-span-1">
+          <BrandMark compact />
+          <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground">
+            An AI-powered platform that helps individuals understand, track and
+            reduce their carbon footprint toward a sustainable future.
           </p>
-
-          <div className="footer-socials">
-
-            <a
-              href="https://github.com/Vansh360/Ecotrack"
-              target="_blank"
-              rel="noreferrer"
-              aria-label="GitHub"
-            >
-              <Github size={15} />
-            </a>
-
-            <a
-              href="#"
-              aria-label="LinkedIn"
-            >
-              <Linkedin size={15} />
-            </a>
-
-            <a
-              href="mailto:contact@ecotrack.com"
-              aria-label="Email"
-            >
-              <Mail size={15} />
-            </a>
-
+          <div className="mt-5 flex gap-2">
+            {[
+              { href: "https://github.com/Vansh360/Ecotrack", label: "GitHub", icon: Code2 },
+              { href: "#", label: "LinkedIn", icon: BriefcaseBusiness },
+              { href: "mailto:contact@ecotrack.com", label: "Email", icon: Mail },
+            ].map((item) => {
+              const Icon = item.icon;
+              return (
+                <motion.a
+                  key={item.label}
+                  href={item.href}
+                  target={item.href.startsWith("http") ? "_blank" : undefined}
+                  rel="noreferrer"
+                  aria-label={item.label}
+                  whileHover={{ y: -2 }}
+                  className="flex size-9 items-center justify-center rounded-lg border border-border text-muted-foreground hover:border-primary/40 hover:text-primary"
+                >
+                  <Icon size={14} />
+                </motion.a>
+              );
+            })}
           </div>
-
         </div>
 
-        {/* PRODUCT */}
-
-        <div className="footer-column">
-
-          <h3>
+        <div>
+          <h3 className="mb-4 text-xs font-bold tracking-[0.16em] text-foreground uppercase">
             Product
           </h3>
-
-          <Link to="/dashboard">
-            Dashboard
-          </Link>
-
-          <Link to="/goals">
-            Goals
-          </Link>
-
-          <Link to="/advisor">
-            AI Advisor
-          </Link>
-
-          <Link to="/leaderboard">
-            Leaderboard
-          </Link>
-
+          <div className="flex flex-col gap-2 text-sm text-muted-foreground">
+            <Link to="/dashboard" className="hover:text-primary">Dashboard</Link>
+            <Link to="/goals" className="hover:text-primary">Goals</Link>
+            <Link to="/advisor" className="hover:text-primary">AI Advisor</Link>
+            <Link to="/leaderboard" className="hover:text-primary">Leaderboard</Link>
+            <Link to="/activities" className="hover:text-primary">Activity History</Link>
+          </div>
         </div>
 
-        {/* TRACKING */}
-
-        <div className="footer-column">
-
-          <h3>
+        <div>
+          <h3 className="mb-4 text-xs font-bold tracking-[0.16em] text-foreground uppercase">
             Tracking
           </h3>
-
-          <Link to="/tracking/transportation">
-            Transportation
-          </Link>
-
-          <Link to="/tracking/electricity">
-            Electricity
-          </Link>
-
-          <Link to="/tracking/food">
-            Food
-          </Link>
-
-          <Link to="/tracking/waste">
-            Waste
-          </Link>
-
-          <Link to="/tracking/water">
-            Water
-          </Link>
-
+          <div className="flex flex-col gap-2 text-sm text-muted-foreground">
+            <Link to="/tracking/transportation" className="hover:text-primary">Transportation</Link>
+            <Link to="/tracking/electricity" className="hover:text-primary">Electricity</Link>
+            <Link to="/tracking/food" className="hover:text-primary">Food</Link>
+            <Link to="/tracking/waste" className="hover:text-primary">Waste</Link>
+            <Link to="/tracking/water" className="hover:text-primary">Water</Link>
+          </div>
         </div>
 
-        {/* ACCOUNT */}
-
-        <div className="footer-column">
-
-          <h3>
+        <div>
+          <h3 className="mb-4 text-xs font-bold tracking-[0.16em] text-foreground uppercase">
             Account
           </h3>
-
-          <Link to="/login">
-            Login
-          </Link>
-
-          <Link to="/register">
-            Register
-          </Link>
-
-          <Link to="/profile">
-            Profile
-          </Link>
-
+          <div className="flex flex-col gap-2 text-sm text-muted-foreground">
+            <Link to="/login" className="hover:text-primary">Login</Link>
+            <Link to="/register" className="hover:text-primary">Register</Link>
+            <Link to="/profile" className="hover:text-primary">Profile</Link>
+            <Link to="/simulator" className="hover:text-primary">Simulator</Link>
+            <Link to="/digital-twin" className="hover:text-primary">Digital Twin</Link>
+          </div>
         </div>
-
       </div>
 
-      <div className="footer-bottom">
-
-        <span>
-          © {new Date().getFullYear()} EcoTrack.
-          All rights reserved.
+      <Separator />
+      <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-6 py-5 sm:flex-row">
+        <span className="text-xs text-muted-foreground">
+          © {new Date().getFullYear()} EcoTrack. All rights reserved.
         </span>
-
-        <button
-          className="footer-top-button"
-          onClick={scrollTop}
-        >
+        <Button variant="outline" size="sm" onClick={scrollTop}>
           Back to top
-          <ArrowUp size={13} />
-        </button>
-
+          <ArrowUp size={12} />
+        </Button>
       </div>
-
     </footer>
   );
 }

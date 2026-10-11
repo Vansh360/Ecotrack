@@ -1,7 +1,14 @@
 import { useState } from "react";
 import { Recycle, CheckCircle } from "lucide-react";
-
 import { useActivities } from "../../context/ActivityContext";
+import PageHeader from "@/components/common/PageHeader";
+import Field from "@/components/common/Field";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { SelectNative } from "@/components/ui/select-native";
+import { Alert } from "@/components/ui/alert";
 
 const WASTE_TYPES = [
   { value: "GENERAL_WASTE", label: "General Household Waste" },
@@ -20,7 +27,6 @@ const WASTE_TYPES = [
 
 export default function Waste() {
   const { addActivity } = useActivities();
-
   const [wasteType, setWasteType] = useState("");
   const [quantity, setQuantity] = useState("");
   const [details, setDetails] = useState("");
@@ -30,21 +36,17 @@ export default function Waste() {
 
   const handleSubmit = async () => {
     const kg = Number(quantity);
-
     if (!wasteType) {
       setError("Please select a waste type.");
       return;
     }
-
     if (!quantity || kg <= 0) {
       setError("Please enter a valid quantity.");
       return;
     }
-
     setSaving(true);
     setError("");
     setMessage("");
-
     try {
       await addActivity({
         category: "WASTE",
@@ -53,7 +55,6 @@ export default function Waste() {
         unit: "kg",
         details: details.trim() || `${wasteType} waste`,
       });
-
       setMessage("Waste activity saved successfully!");
       setWasteType("");
       setQuantity("");
@@ -67,78 +68,62 @@ export default function Waste() {
   };
 
   return (
-    <div className="tracking-page">
-      <div className="tracking-header">
-        <div className="tracking-icon">
-          <Recycle size={25} />
-        </div>
-
-        <div>
-          <span>TRACK</span>
-          <h1>Waste Management</h1>
-          <p>Track waste generation and recycling activities.</p>
-        </div>
-      </div>
-
-      <div className="tracking-card">
-        <div className="form-group">
-          <label>Waste Type</label>
-          <select
-            value={wasteType}
-            onChange={(e) => {
-              setWasteType(e.target.value);
-              setError("");
-              setMessage("");
-            }}
-          >
-            <option value="">Select waste type</option>
-            {WASTE_TYPES.map((type) => (
-              <option key={type.value} value={type.value}>
-                {type.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="form-group" style={{ marginTop: 15 }}>
-          <label>Waste Quantity</label>
-          <input
-            type="number"
-            min="0"
-            step="0.1"
-            placeholder="Enter waste quantity in kg"
-            value={quantity}
-            onChange={(e) => {
-              setQuantity(e.target.value);
-              setError("");
-              setMessage("");
-            }}
-          />
-          <small>Example: 2 kg</small>
-        </div>
-
-        <div className="form-group" style={{ marginTop: 15 }}>
-          <label>Additional Details (Optional)</label>
-          <textarea
-            rows="4"
-            placeholder="Example: Plastic bottles, food packaging, old clothes..."
-            value={details}
-            onChange={(e) => setDetails(e.target.value)}
-          />
-        </div>
-
-        {error && <div className="error-message">{error}</div>}
-        {message && <div className="success-message">{message}</div>}
-
-        <button
-          className="save-activity-button"
-          onClick={handleSubmit}
-          disabled={saving}
-        >
-          <CheckCircle size={15} />
-          {saving ? "Saving..." : "Save Activity"}
-        </button>
-      </div>
+    <div className="flex flex-col gap-8">
+      <PageHeader
+        icon={Recycle}
+        eyebrow="Track"
+        title="Waste Management"
+        description="Track waste generation and recycling activities."
+      />
+      <Card>
+        <CardContent className="flex flex-col gap-5">
+          <Field label="Waste Type">
+            <SelectNative
+              value={wasteType}
+              onChange={(e) => {
+                setWasteType(e.target.value);
+                setError("");
+                setMessage("");
+              }}
+            >
+              <option value="">Select waste type</option>
+              {WASTE_TYPES.map((type) => (
+                <option key={type.value} value={type.value}>
+                  {type.label}
+                </option>
+              ))}
+            </SelectNative>
+          </Field>
+          <Field label="Waste Quantity" hint="Example: 2 kg">
+            <Input
+              type="number"
+              min="0"
+              step="0.1"
+              placeholder="Enter waste quantity in kg"
+              value={quantity}
+              onChange={(e) => {
+                setQuantity(e.target.value);
+                setError("");
+                setMessage("");
+              }}
+            />
+          </Field>
+          <Field label="Additional Details (Optional)">
+            <Textarea
+              rows="4"
+              placeholder="Example: Plastic bottles, food packaging, old clothes..."
+              value={details}
+              onChange={(e) => setDetails(e.target.value)}
+            />
+          </Field>
+          {error && <Alert variant="destructive">{error}</Alert>}
+          {message && <Alert variant="success">{message}</Alert>}
+          <Button onClick={handleSubmit} disabled={saving}>
+            <CheckCircle size={15} />
+            {saving ? "Saving..." : "Save Activity"}
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   );
 }

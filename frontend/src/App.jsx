@@ -25,120 +25,34 @@ import Profile from "./pages/Profile/Profile";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import DashboardLayout from "./layouts/DashboardLayout";
 
-import AddActivity
-  from "./pages/Activity/AddActivity";
+import AddActivity from "./pages/Activity/AddActivity";
 
 function App() {
   return (
     <Routes>
-
-      {/* PUBLIC PAGES */}
-
-      <Route
-        path="/"
-        element={<Landing />}
-      />
-
-      <Route
-        path="/login"
-        element={<Login />}
-      />
-
-      <Route
-        path="/register"
-        element={<Register />}
-      />
-
-
-      {/* PROTECTED APPLICATION */}
+      <Route path="/" element={<Landing />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
 
       <Route element={<ProtectedRoute />}>
-
         <Route element={<DashboardLayout />}>
-           <Route
-    path="/dashboard"
-    element={<Dashboard />}
-  />
-
-  <Route
-    path="/activity/add"
-    element={<AddActivity />}
-  />
-
-          <Route
-            path="/dashboard"
-            element={<Dashboard />}
-          />
-
-          <Route
-            path="/activities"
-            element={<ActivityHistory />}
-          />
-
-          <Route
-            path="/tracking/transportation"
-            element={<Transportation />}
-          />
-
-          <Route
-            path="/tracking/electricity"
-            element={<Electricity />}
-          />
-
-          <Route
-            path="/tracking/food"
-            element={<Food />}
-          />
-
-          <Route
-            path="/tracking/waste"
-            element={<Waste />}
-          />
-
-          <Route
-            path="/tracking/water"
-            element={<Water />}
-          />
-
-          <Route
-            path="/goals"
-            element={<Goals />}
-          />
-
-          <Route
-            path="/digital-twin"
-            element={<DigitalTwin />}
-          />
-
-          <Route
-            path="/anomaly-detector"
-            element={<AnomalyDetector />}
-          />
-
-          <Route
-            path="/simulator"
-            element={<CarbonSimulator />}
-          />
-
-          <Route
-            path="/advisor"
-            element={<Advisor />}
-          />
-
-          <Route
-            path="/leaderboard"
-            element={<Leaderboard />}
-          />
-
-          <Route
-            path="/profile"
-            element={<Profile />}
-          />
-
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/activity/add" element={<AddActivity />} />
+          <Route path="/activities" element={<ActivityHistory />} />
+          <Route path="/tracking/transportation" element={<Transportation />} />
+          <Route path="/tracking/electricity" element={<Electricity />} />
+          <Route path="/tracking/food" element={<Food />} />
+          <Route path="/tracking/waste" element={<Waste />} />
+          <Route path="/tracking/water" element={<Water />} />
+          <Route path="/goals" element={<Goals />} />
+          <Route path="/digital-twin" element={<DigitalTwin />} />
+          <Route path="/anomaly-detector" element={<AnomalyDetector />} />
+          <Route path="/simulator" element={<CarbonSimulator />} />
+          <Route path="/advisor" element={<Advisor />} />
+          <Route path="/leaderboard" element={<Leaderboard />} />
+          <Route path="/profile" element={<Profile />} />
         </Route>
-
       </Route>
-
     </Routes>
   );
 }
