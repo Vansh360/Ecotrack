@@ -119,6 +119,14 @@ export default function Sidebar() {
         </NavLink>
 
         <NavLink
+          to="/digital-twin"
+          className="sidebar-link"
+        >
+          <Brain size={18} />
+          <span>Carbon Digital Twin</span>
+        </NavLink>
+
+        <NavLink
           to="/simulator"
           className="sidebar-link"
         >

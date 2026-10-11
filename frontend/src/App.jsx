@@ -15,6 +15,7 @@ import Waste from "./pages/Tracking/Waste";
 import Water from "./pages/Tracking/Water";
 
 import Goals from "./pages/Goals/Goals";
+import DigitalTwin from "./pages/DigitalTwin/DigitalTwin";
 import CarbonSimulator from "./Simulator/CarbonSimulator";
 import Advisor from "./Advisor/Advisor";
 import Leaderboard from "./pages/Leaderboard/Leaderboard";
@@ -101,6 +102,11 @@ function App() {
           <Route
             path="/goals"
             element={<Goals />}
+          />
+
+          <Route
+            path="/digital-twin"
+            element={<DigitalTwin />}
           />
 
           <Route
