@@ -599,6 +599,26 @@ public class EmissionFactorSeeder implements CommandLineRunner {
                 "1.0"
         );
 
+        addIfMissing(
+                "FOOD",
+                "CHOCOLATE_SPREAD",
+                8.0,
+                "kgCO2e/kg",
+                "EcoTrack provisional estimate; product-specific data unavailable",
+                "GLOBAL",
+                "1.0"
+        );
+
+        addIfMissing(
+                "FOOD",
+                "SOFT_DRINK",
+                0.5,
+                "kgCO2e/kg",
+                "EcoTrack provisional estimate; product-specific data unavailable",
+                "GLOBAL",
+                "1.0"
+        );
+
 
         // ==========================================
         // WASTE
@@ -1001,7 +1021,6 @@ public class EmissionFactorSeeder implements CommandLineRunner {
         );
     }
 }
-
 
 
 
