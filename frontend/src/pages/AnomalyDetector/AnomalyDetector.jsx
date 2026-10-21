@@ -1,5 +1,5 @@
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -13,7 +13,7 @@ import { detectCarbonAnomalies } from "../../utils/anomalyDetector";
 import {
   getAnomalyReviews,
   saveAnomalyReview,
-} from "../../utils/anomalyReviewStorage";
+} from "../../services/anomalyReviewService";
 
 export default function AnomalyDetector() {
   const {
@@ -30,24 +30,56 @@ export default function AnomalyDetector() {
 
   const [reviews, setReviews] = useState({});
   const [reviewNotes, setReviewNotes] = useState({});
+  const [reviewsLoading, setReviewsLoading] = useState(true);
+  const [reviewsError, setReviewsError] = useState("");
+  const [reviewsLoadFailed, setReviewsLoadFailed] = useState(false);
+  const [savingActivityId, setSavingActivityId] = useState(null);
 
-  useEffect(() => {
-    setReviews(getAnomalyReviews());
+  const loadReviews = useCallback(async () => {
+    try {
+      const storedReviews = await getAnomalyReviews();
+      setReviews(
+        Object.fromEntries(
+          storedReviews.map((review) => [
+            String(review.activityId),
+            review,
+          ])
+        )
+      );
+      setReviewsError("");
+      setReviewsLoadFailed(false);
+    } catch (err) {
+      setReviewsError(err.message || "Unable to load anomaly reviews.");
+      setReviewsLoadFailed(true);
+    } finally {
+      setReviewsLoading(false);
+    }
   }, []);
 
-  const handleReview = (activityId, status) => {
+  useEffect(() => {
+    Promise.resolve().then(loadReviews);
+  }, [loadReviews]);
+
+  const handleReview = async (activityId, status) => {
+    setSavingActivityId(String(activityId));
+    setReviewsError("");
+    setReviewsLoadFailed(false);
+
     try {
-      const review = saveAnomalyReview(activityId, {
+      const review = await saveAnomalyReview(
+        activityId,
         status,
-        note: reviewNotes[String(activityId)] || "",
-      });
+        reviewNotes[String(activityId)] || ""
+      );
 
       setReviews((previous) => ({
         ...previous,
         [String(activityId)]: review,
       }));
     } catch (err) {
-      window.alert(err.message || "Unable to save review.");
+      setReviewsError(err.message || "Unable to save review.");
+    } finally {
+      setSavingActivityId(null);
     }
   };
 
@@ -172,6 +204,27 @@ export default function AnomalyDetector() {
           </button>
         </div>
 
+        {reviewsError && (
+          <div className="anomaly-review-error" role="alert">
+            <p>{reviewsError}</p>
+            {reviewsLoadFailed && (
+              <button
+                type="button"
+                onClick={() => {
+                  setReviewsLoading(true);
+                  loadReviews();
+                }}
+              >
+                Retry loading reviews
+              </button>
+            )}
+          </div>
+        )}
+
+        {reviewsLoading && (
+          <p role="status">Loading saved reviews...</p>
+        )}
+
         {activities.length === 0 ? (
           <div className="anomaly-empty">
             <Activity size={32} />
@@ -261,6 +314,10 @@ export default function AnomalyDetector() {
                   <div className="anomaly-review-actions">
                     <button
                       type="button"
+                      disabled={
+                        reviewsLoading ||
+                        savingActivityId === String(finding.id)
+                      }
                       onClick={() => handleReview(finding.id, "VERIFIED")}
                     >
                       Verified
@@ -268,6 +325,10 @@ export default function AnomalyDetector() {
 
                     <button
                       type="button"
+                      disabled={
+                        reviewsLoading ||
+                        savingActivityId === String(finding.id)
+                      }
                       onClick={() => handleReview(finding.id, "CORRECTED")}
                     >
                       Corrected
@@ -275,6 +336,10 @@ export default function AnomalyDetector() {
 
                     <button
                       type="button"
+                      disabled={
+                        reviewsLoading ||
+                        savingActivityId === String(finding.id)
+                      }
                       onClick={() =>
                         handleReview(finding.id, "NOT_AN_ISSUE")
                       }
@@ -290,7 +355,9 @@ export default function AnomalyDetector() {
                         <strong>{statusLabels[review.status]}</strong>
                         {" · "}
                         Reviewed{" "}
-                        {new Date(review.reviewedAt).toLocaleString("en-IN")}
+                        {new Date(
+                          review.updatedAt || review.reviewedAt
+                        ).toLocaleString("en-IN")}
                       </span>
                     </div>
                   )}

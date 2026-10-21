@@ -206,6 +206,11 @@ export const createActivity =
             activityDate:
               activity.activityDate,
           }),
+
+          ...(activity.details && {
+            metadata:
+              activity.details,
+          }),
         },
         {
           headers:

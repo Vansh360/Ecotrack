@@ -18,6 +18,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { SelectNative } from "@/components/ui/select-native";
+import AutoTripDetection from "../../components/environment/AutoTripDetection";
 
 export default function Transportation() {
   const { addActivity } = useActivities();
@@ -133,6 +134,7 @@ export default function Transportation() {
         title="Transportation"
         description="Calculate emissions from your daily travel."
       />
+      <AutoTripDetection />
       <Card>
         <CardContent className="flex flex-col gap-5">
           <Field label="Vehicle Type" icon={Car}>

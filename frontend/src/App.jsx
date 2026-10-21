@@ -19,8 +19,11 @@ import DigitalTwin from "./pages/DigitalTwin/DigitalTwin";
 import AnomalyDetector from "./pages/AnomalyDetector/AnomalyDetector";
 import CarbonSimulator from "./Simulator/CarbonSimulator";
 import Advisor from "./Advisor/Advisor";
+import EcoActionPlanner from "./pages/Advisor/EcoActionPlanner";
 import Leaderboard from "./pages/Leaderboard/Leaderboard";
 import Profile from "./pages/Profile/Profile";
+import EnvironmentalIntelligence from "./pages/EnvironmentalIntelligence";
+import ReceiptScanner from "./pages/ReceiptScanner/ReceiptScanner";
 
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import DashboardLayout from "./layouts/DashboardLayout";
@@ -49,6 +52,9 @@ function App() {
           <Route path="/anomaly-detector" element={<AnomalyDetector />} />
           <Route path="/simulator" element={<CarbonSimulator />} />
           <Route path="/advisor" element={<Advisor />} />
+          <Route path="/receipt-scanner" element={<ReceiptScanner />} />
+          <Route path="/environmental-intelligence" element={<EnvironmentalIntelligence />} />
+          <Route path="/eco-actions" element={<EcoActionPlanner />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/profile" element={<Profile />} />
         </Route>

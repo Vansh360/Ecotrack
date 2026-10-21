@@ -1,0 +1,117 @@
+.auto-trip-card {
+  max-width: 900px;
+  margin: 0 auto 20px;
+  padding: 24px;
+  border: 1px solid #d8e8dd;
+  border-radius: 15px;
+  background: #f5fbf7;
+}
+
+.auto-trip-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.auto-trip-icon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 12px;
+  background: #e1f2e7;
+  color: #1f7a4d;
+}
+
+.auto-trip-heading h2 {
+  margin: 0;
+  color: #193d2b;
+  font-size: 18px;
+}
+
+.auto-trip-heading p,
+.auto-trip-privacy {
+  margin: 5px 0 0;
+  color: #66776c;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.auto-trip-privacy {
+  margin: 16px 0;
+}
+
+.auto-trip-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.auto-trip-actions .calculate-button,
+.auto-trip-stop,
+.auto-trip-review .save-activity-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.auto-trip-actions > strong {
+  color: #193d2b;
+  font-size: 20px;
+}
+
+.auto-trip-live {
+  color: #237648;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.auto-trip-stop {
+  padding: 11px 16px;
+  border: 0;
+  border-radius: 8px;
+  background: #a23b3b;
+  color: white;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.auto-trip-review {
+  display: grid;
+  max-width: 480px;
+  gap: 9px;
+  margin-top: 18px;
+}
+
+.auto-trip-review p {
+  margin: 0;
+  color: #294235;
+}
+
+.auto-trip-review label {
+  color: #344d3f;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.auto-trip-review select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #cfddd3;
+  border-radius: 8px;
+  background: white;
+}
+
+.auto-trip-review small,
+.auto-trip-error {
+  color: #76522b;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.auto-trip-error {
+  margin: 12px 0 0;
+  color: #a32929;
+}

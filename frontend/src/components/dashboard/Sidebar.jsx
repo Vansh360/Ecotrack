@@ -18,6 +18,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Sparkles,
+  Wind,
+  ScanLine,
 } from "lucide-react";
 import BrandMark from "../common/BrandMark";
 import { cn } from "@/lib/utils";
@@ -41,6 +43,7 @@ const navGroups = [
       { to: "/tracking/food", icon: Utensils, label: "Food" },
       { to: "/tracking/waste", icon: Recycle, label: "Waste" },
       { to: "/tracking/water", icon: Droplets, label: "Water" },
+      { to: "/receipt-scanner", icon: ScanLine, label: "Receipt Scanner" },
     ],
   },
   {
@@ -49,8 +52,10 @@ const navGroups = [
       { to: "/goals", icon: Target, label: "Goals" },
       { to: "/digital-twin", icon: Brain, label: "Carbon Digital Twin" },
       { to: "/anomaly-detector", icon: ShieldCheck, label: "Anomaly Detector" },
+      { to: "/environmental-intelligence", icon: Wind, label: "Environmental Intelligence" },
       { to: "/simulator", icon: ArrowRight, label: "Carbon Simulator" },
       { to: "/advisor", icon: Sparkles, label: "AI Advisor" },
+      { to: "/eco-actions", icon: Sparkles, label: "EcoAction Planner" },
     ],
   },
   {

@@ -356,6 +356,26 @@ export const EMISSION_FACTORS = {
       boundary: "food lifecycle emissions",
     },
 
+    chocolateSpread: {
+      value: 8,
+      unit: "kg CO2e/kg",
+      activityUnit: "kg",
+      source: "EcoTrack provisional estimate; product-specific data unavailable",
+      region: "Global",
+      year: 2026,
+      boundary: "illustrative food lifecycle estimate; not product-specific",
+    },
+
+    softDrink: {
+      value: 0.5,
+      unit: "kg CO2e/kg",
+      activityUnit: "kg",
+      source: "EcoTrack provisional estimate; product-specific data unavailable",
+      region: "Global",
+      year: 2026,
+      boundary: "illustrative packaged beverage estimate; not product-specific",
+    },
+
     /*
      * Compatibility with your existing Food.jsx.
      * These are provisional because the PDF does not

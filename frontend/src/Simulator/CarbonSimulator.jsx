@@ -1,257 +1,186 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
+import { ArrowRight } from "lucide-react";
 import {
-  ArrowRight,
-} from "lucide-react";
+  Bar,
+  BarChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
-import {
-  simulateEmissionChange,
-} from "../utils/sustainabilityEngine";
-import { SelectNative } from "@/components/ui/select-native";
+import api from "../services/api";
 
-const OPTIONS = {
-  Car: {
-    factor: 0.174,
-    unit: "kg CO₂e/km",
+const SCENARIOS = {
+  electricity: {
+    label: "Reduce electricity use",
+    activityLabel: "Baseline electricity use (kWh)",
+    changeLabel: "Electricity reduction",
   },
-
-  Bus: {
-    factor: 0.104,
-    unit: "kg CO₂e/person/km",
+  transport: {
+    label: "Increase public transport",
+    activityLabel: "Baseline car travel (km)",
+    changeLabel: "Car travel replaced by bus",
   },
-
-  Train: {
-    factor: 0.035,
-    unit: "kg CO₂e/person/km",
+  solar: {
+    label: "Campus solar adoption",
+    activityLabel: "Baseline electricity demand (kWh)",
+    changeLabel: "Electricity demand supplied by solar",
   },
 };
 
 export default function CarbonSimulator() {
+  const [scenario, setScenario] = useState("electricity");
+  const [baseline, setBaseline] = useState("300");
+  const [change, setChange] = useState(20);
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const [distance, setDistance] =
-    useState(100);
+  async function runSimulation(event) {
+    event.preventDefault();
+    setLoading(true);
+    setError("");
+    setResult(null);
 
-  const [currentMode, setCurrentMode] =
-    useState("Car");
+    try {
+      const response = await api.post("/simulations/what-if", {
+        scenario,
+        baselineValue: Number(baseline),
+        changePercent: Number(change),
+      });
+      setResult(response.data);
+    } catch (requestError) {
+      setError(
+        requestError.response?.data?.message
+          || requestError.message
+          || "Unable to run simulation."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
 
-  const [alternativeMode, setAlternativeMode] =
-    useState("Bus");
-
-  const result = useMemo(() => {
-
-    const current =
-      OPTIONS[currentMode];
-
-    const alternative =
-      OPTIONS[alternativeMode];
-
-    return simulateEmissionChange({
-      currentQuantity:
-        Number(distance),
-
-      currentFactor:
-        current.factor,
-
-      alternativeQuantity:
-        Number(distance),
-
-      alternativeFactor:
-        alternative.factor,
-    });
-
-  }, [
-    distance,
-    currentMode,
-    alternativeMode,
-  ]);
+  const chartData = result
+    ? [
+        { name: "Baseline", emissions: result.baselineEmissions },
+        { name: "Simulated", emissions: result.simulatedEmissions },
+      ]
+    : [];
 
   return (
     <div className="tracking-page">
-
       <div className="tracking-header">
-
         <div className="tracking-icon">
           <ArrowRight size={25} />
         </div>
-
         <div>
           <span>SIMULATE</span>
-
-          <h1>
-            Carbon Simulator
-          </h1>
-
+          <h1>What-If Environmental Simulator</h1>
           <p>
-            Compare different choices
-            before making them.
+            Explore hypothetical changes. Results are estimates,
+            not measured real-world reductions.
           </p>
         </div>
-
       </div>
 
+      <form className="tracking-card" onSubmit={runSimulation}>
+        <div className="tracking-form-grid">
+          <div className="form-group">
+            <label htmlFor="simulation-scenario">Scenario</label>
+            <select
+              id="simulation-scenario"
+              value={scenario}
+              onChange={(event) => {
+                setScenario(event.target.value);
+                setResult(null);
+              }}
+            >
+              {Object.entries(SCENARIOS).map(([value, option]) => (
+                <option key={value} value={value}>{option.label}</option>
+              ))}
+            </select>
+          </div>
 
-      <div className="tracking-card">
+          <div className="form-group">
+            <label htmlFor="simulation-baseline">
+              {SCENARIOS[scenario].activityLabel}
+            </label>
+            <input
+              id="simulation-baseline"
+              type="number"
+              min="0"
+              step="any"
+              required
+              value={baseline}
+              onChange={(event) => setBaseline(event.target.value)}
+            />
+          </div>
 
-        <div className="form-group">
-
-          <label>
-            Distance
-          </label>
-
-          <input
-            type="number"
-            min="1"
-            value={distance}
-            onChange={(e) =>
-              setDistance(
-                e.target.value
-              )
-            }
-          />
-
-          <small>
-            Enter distance in kilometres.
-          </small>
-
+          <div className="form-group">
+            <label htmlFor="simulation-change">
+              {SCENARIOS[scenario].changeLabel}: {change}%
+            </label>
+            <input
+              id="simulation-change"
+              type="range"
+              min="0"
+              max="100"
+              value={change}
+              onChange={(event) => setChange(Number(event.target.value))}
+            />
+          </div>
         </div>
 
+        <button className="calculate-button" type="submit" disabled={loading}>
+          {loading ? "Calculating..." : "Run simulation"}
+        </button>
 
-        <div className="form-group">
+        {error && <p role="alert">{error}</p>}
 
-          <label>
-            Current Transport
-          </label>
+        {result && (
+          <section aria-live="polite">
+            <h2>Estimated results</h2>
+            <div className="tracking-form-grid">
+              <div className="calculation-result">
+                <span>Baseline emissions</span>
+                <strong>{result.baselineEmissions.toFixed(2)}</strong>
+                <small>{result.unit}</small>
+              </div>
+              <div className="calculation-result">
+                <span>Simulated emissions</span>
+                <strong>{result.simulatedEmissions.toFixed(2)}</strong>
+                <small>{result.unit}</small>
+              </div>
+              <div className="calculation-result">
+                <span>Estimated avoided emissions</span>
+                <strong>{result.co2eAvoided.toFixed(2)}</strong>
+                <small>{result.unit}</small>
+              </div>
+            </div>
 
-          <SelectNative
-            value={currentMode}
-            onChange={(e) =>
-              setCurrentMode(
-                e.target.value
-              )
-            }
-          >
+            <div style={{ width: "100%", height: 300, marginTop: 24 }}>
+              <ResponsiveContainer>
+                <BarChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="emissions" name={result.unit} fill="#1f7a4d" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
 
-            <option value="Car">
-              🚗 Car
-            </option>
-
-            <option value="Bus">
-              🚌 Bus
-            </option>
-
-            <option value="Train">
-              🚆 Train
-            </option>
-
-          </SelectNative>
-
-        </div>
-
-
-        <div className="form-group">
-
-          <label>
-            Alternative Transport
-          </label>
-
-          <SelectNative
-            value={alternativeMode}
-            onChange={(e) =>
-              setAlternativeMode(
-                e.target.value
-              )
-            }
-          >
-
-            <option value="Car">
-              🚗 Car
-            </option>
-
-            <option value="Bus">
-              🚌 Bus
-            </option>
-
-            <option value="Train">
-              🚆 Train
-            </option>
-
-          </SelectNative>
-
-        </div>
-
-
-        <div className="calculation-result">
-
-          <span>
-            Current Emission
-          </span>
-
-          <strong>
-            {result.current} kg CO₂e
-          </strong>
-
-        </div>
-
-
-        <div className="calculation-result">
-
-          <span>
-            Alternative Emission
-          </span>
-
-          <strong>
-            {result.alternative} kg CO₂e
-          </strong>
-
-        </div>
-
-
-        <div className="calculation-result">
-
-          <span>
-            Potential Reduction
-          </span>
-
-          <strong>
-            {result.reduction} kg CO₂e
-          </strong>
-
-          <small>
-            {result.percentage}% reduction
-          </small>
-
-        </div>
-
-
-        <div
-          style={{
-            marginTop: "20px",
-            padding: "20px",
-            borderRadius: "14px",
-            background: "#edf8f1",
-          }}
-        >
-
-          <strong>
-            🌱 Recommendation
-          </strong>
-
-          <p>
-            Switching from{" "}
-            <b>{currentMode}</b>{" "}
-            to{" "}
-            <b>{alternativeMode}</b>{" "}
-            could reduce approximately{" "}
-            <b>
-              {result.reduction}
-              {" kg CO₂e"}
-            </b>{" "}
-            for this distance.
-          </p>
-
-        </div>
-
-      </div>
-
+            <h3>Assumptions</h3>
+            <p>{result.assumptions}</p>
+            <p>
+              <strong>Simulation only:</strong> This estimate is not proof
+              that emissions were actually reduced.
+            </p>
+          </section>
+        )}
+      </form>
     </div>
   );
 }
