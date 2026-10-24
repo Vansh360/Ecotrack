@@ -12,8 +12,13 @@ export const RECEIPT_FOOD_CATEGORIES = [
   { id: "tomatoes", label: "Tomatoes", activityType: "TOMATOES" },
   { id: "lentilsPeas", label: "Lentils / peas", activityType: "LENTILS_PEAS" },
   { id: "potatoes", label: "Potatoes", activityType: "POTATOES" },
-  { id: "chocolateSpread", label: "Chocolate and sweet spreads", activityType: "CHOCOLATE_SPREAD" },
+  { id: "milk", label: "Milk / dairy", activityType: "MILK" },
+  { id: "biscuits", label: "Biscuits", activityType: "BISCUITS" },
+  { id: "chocolate", label: "Chocolate", activityType: "CHOCOLATE" },
+  { id: "sweetSpread", label: "Sweet spreads", activityType: "SWEET_SPREAD" },
   { id: "softDrink", label: "Soft drinks", activityType: "SOFT_DRINK" },
+  { id: "noodles", label: "Noodles", activityType: "NOODLES" },
+  { id: "salt", label: "Salt / condiments", activityType: "SALT" },
 ];
 
 const RECEIPT_TOTAL_LINE = /\b(total|subtotal|tax|gst|vat|discount|cash|change|balance|rounding|amount paid|credit|debit|upi|visa|mastercard)\b/i;
@@ -40,8 +45,13 @@ export function classifyFood(text) {
     ["tomatoes", /\b(tomato|tomatoes)\b/],
     ["lentilsPeas", /\b(lentil|lentils|pea|peas|chickpea|chickpeas)\b/],
     ["potatoes", /\b(potato|potatoes)\b/],
-    ["chocolateSpread", /\b(nutella|chocolate spread|hazelnut spread|cocoa spread)\b/],
-    ["softDrink", /\b(coca cola|coke|cola|pepsi|soft drink|soda|fizzy drink)\b/],
+    ["biscuits", /\b(biscuit|parle|cookie|gluco)\b/],
+    ["noodles", /\b(noodle|maggi|pasta)\b/],
+    ["softDrink", /\b(coca cola|coke|cola|pepsi|soft drink|soda|fizzy drink|juice)\b/],
+    ["sweetSpread", /\b(nutella|sweet spread|chocolate spread|hazelnut spread|cocoa spread|spread)\b/],
+    ["chocolate", /\b(chocolate|cadbury|dairy milk|kitkat)\b/],
+    ["milk", /\b(milk|dairy|toned|uht)\b/],
+    ["salt", /\b(salt)\b/],
   ];
 
   return patterns.find(([, pattern]) => pattern.test(normalized))?.[0] || "";

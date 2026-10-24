@@ -11,9 +11,14 @@ import {
 test("classifies grocery item names using supported EcoTrack food categories", () => {
   assert.equal(classifyFood("Organic basmati rice"), "rice");
   assert.equal(classifyFood("Fresh tomatoes"), "tomatoes");
-  assert.equal(classifyFood("Nutella hazelnut cocoa spread"), "chocolateSpread");
+  assert.equal(classifyFood("Toned UHT milk"), "milk");
+  assert.equal(classifyFood("Parle-G biscuits"), "biscuits");
+  assert.equal(classifyFood("Cadbury Dairy Milk"), "chocolate");
+  assert.equal(classifyFood("Nutella hazelnut cocoa spread"), "sweetSpread");
   assert.equal(classifyFood("Coca-Cola Original Taste"), "softDrink");
   assert.equal(classifyFood("Pepsi Cola"), "softDrink");
+  assert.equal(classifyFood("Maggi noodles"), "noodles");
+  assert.equal(classifyFood("Tata Salt"), "salt");
   assert.equal(classifyFood("almond drink"), "");
 });
 
@@ -42,13 +47,13 @@ test("converts packaged beverage volume to approximate grams", () => {
 
   assert.equal(item.foodCategory, "softDrink");
   assert.equal(item.grams, 500);
-  assert.equal(estimateItemEmissions(item).emissions, 0.25);
+  assert.equal(estimateItemEmissions(item).emissions, 0.21195);
 });
 
 test("parses product quantities written in liters", () => {
   const item = createReceiptItem("Nutella 1 L");
 
-  assert.equal(item.foodCategory, "chocolateSpread");
+  assert.equal(item.foodCategory, "sweetSpread");
   assert.equal(item.grams, 1000);
 });
 
@@ -60,4 +65,23 @@ test("estimates emissions from the existing factor registry and item weight", ()
 
   assert.equal(estimate.category.activityType, "RICE");
   assert.equal(estimate.emissions, 2.225);
+});
+
+test("estimates emissions for every new receipt food group from sourced factors", () => {
+  const expectedFactors = {
+    milk: 1.27,
+    biscuits: 4.0605,
+    chocolate: 11.2983,
+    sweetSpread: 9.11,
+    softDrink: 0.4239,
+    noodles: 1.5559,
+    salt: 0.632,
+  };
+
+  for (const [foodCategory, factor] of Object.entries(expectedFactors)) {
+    const estimate = estimateItemEmissions({ grams: 1000, foodCategory });
+    assert.equal(estimate.category.id, foodCategory);
+    assert.equal(estimate.factor, factor);
+    assert.equal(estimate.emissions, factor);
+  }
 });

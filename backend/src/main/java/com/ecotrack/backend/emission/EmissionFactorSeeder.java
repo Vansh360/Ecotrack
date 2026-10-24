@@ -599,24 +599,84 @@ public class EmissionFactorSeeder implements CommandLineRunner {
                 "1.0"
         );
 
-        addIfMissing(
+        addOrUpdate(
                 "FOOD",
                 "CHOCOLATE_SPREAD",
-                8.0,
+                9.11,
                 "kgCO2e/kg",
-                "EcoTrack provisional estimate; product-specific data unavailable",
-                "GLOBAL",
-                "1.0"
+                "AGRIBALYSE 3.2 (ADEME) - https://doi.org/10.57745/XTENSJ",
+                "FRANCE",
+                "AGRIBALYSE-3.2"
         );
 
         addIfMissing(
                 "FOOD",
-                "SOFT_DRINK",
-                0.5,
+                "MILK",
+                1.27,
                 "kgCO2e/kg",
-                "EcoTrack provisional estimate; product-specific data unavailable",
-                "GLOBAL",
-                "1.0"
+                "AGRIBALYSE 3.2 (ADEME) - https://doi.org/10.57745/XTENSJ",
+                "FRANCE",
+                "AGRIBALYSE-3.2"
+        );
+
+        addIfMissing(
+                "FOOD",
+                "BISCUITS",
+                4.0605,
+                "kgCO2e/kg",
+                "AGRIBALYSE 3.2 (ADEME) - https://doi.org/10.57745/XTENSJ",
+                "FRANCE",
+                "AGRIBALYSE-3.2"
+        );
+
+        addIfMissing(
+                "FOOD",
+                "CHOCOLATE",
+                11.2983,
+                "kgCO2e/kg",
+                "AGRIBALYSE 3.2 (ADEME) - https://doi.org/10.57745/XTENSJ",
+                "FRANCE",
+                "AGRIBALYSE-3.2"
+        );
+
+        addIfMissing(
+                "FOOD",
+                "SWEET_SPREAD",
+                9.11,
+                "kgCO2e/kg",
+                "AGRIBALYSE 3.2 (ADEME) - https://doi.org/10.57745/XTENSJ",
+                "FRANCE",
+                "AGRIBALYSE-3.2"
+        );
+
+        addOrUpdate(
+                "FOOD",
+                "SOFT_DRINK",
+                0.4239,
+                "kgCO2e/kg",
+                "AGRIBALYSE 3.2 (ADEME) - https://doi.org/10.57745/XTENSJ",
+                "FRANCE",
+                "AGRIBALYSE-3.2"
+        );
+
+        addIfMissing(
+                "FOOD",
+                "NOODLES",
+                1.5559,
+                "kgCO2e/kg",
+                "AGRIBALYSE 3.2 (ADEME) - https://doi.org/10.57745/XTENSJ",
+                "FRANCE",
+                "AGRIBALYSE-3.2"
+        );
+
+        addIfMissing(
+                "FOOD",
+                "SALT",
+                0.632,
+                "kgCO2e/kg",
+                "AGRIBALYSE 3.2 (ADEME) - https://doi.org/10.57745/XTENSJ",
+                "FRANCE",
+                "AGRIBALYSE-3.2"
         );
 
 
@@ -1021,6 +1081,5 @@ public class EmissionFactorSeeder implements CommandLineRunner {
         );
     }
 }
-
 
 

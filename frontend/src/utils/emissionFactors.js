@@ -356,24 +356,81 @@ export const EMISSION_FACTORS = {
       boundary: "food lifecycle emissions",
     },
 
-    chocolateSpread: {
-      value: 8,
+    milk: {
+      value: 1.27,
       unit: "kg CO2e/kg",
       activityUnit: "kg",
-      source: "EcoTrack provisional estimate; product-specific data unavailable",
-      region: "Global",
-      year: 2026,
-      boundary: "illustrative food lifecycle estimate; not product-specific",
+      source: "AGRIBALYSE 3.2 (ADEME)",
+      sourceUrl: "https://doi.org/10.57745/XTENSJ",
+      region: "France",
+      year: 2024,
+      boundary: "1 kg consumed at consumer; representative semi-skimmed UHT milk",
+    },
+
+    biscuits: {
+      value: 4.0605,
+      unit: "kg CO2e/kg",
+      activityUnit: "kg",
+      source: "AGRIBALYSE 3.2 (ADEME)",
+      sourceUrl: "https://doi.org/10.57745/XTENSJ",
+      region: "France",
+      year: 2024,
+      boundary: "1 kg consumed at consumer; mean of biscuit and cookie products",
+    },
+
+    chocolate: {
+      value: 11.2983,
+      unit: "kg CO2e/kg",
+      activityUnit: "kg",
+      source: "AGRIBALYSE 3.2 (ADEME)",
+      sourceUrl: "https://doi.org/10.57745/XTENSJ",
+      region: "France",
+      year: 2024,
+      boundary: "1 kg consumed at consumer; mean of chocolate and chocolate products",
+    },
+
+    sweetSpread: {
+      value: 9.11,
+      unit: "kg CO2e/kg",
+      activityUnit: "kg",
+      source: "AGRIBALYSE 3.2 (ADEME)",
+      sourceUrl: "https://doi.org/10.57745/XTENSJ",
+      region: "France",
+      year: 2024,
+      boundary: "1 kg consumed at consumer; chocolate hazelnut spread",
     },
 
     softDrink: {
-      value: 0.5,
+      value: 0.4239,
       unit: "kg CO2e/kg",
       activityUnit: "kg",
-      source: "EcoTrack provisional estimate; product-specific data unavailable",
-      region: "Global",
-      year: 2026,
-      boundary: "illustrative packaged beverage estimate; not product-specific",
+      source: "AGRIBALYSE 3.2 (ADEME)",
+      sourceUrl: "https://doi.org/10.57745/XTENSJ",
+      region: "France",
+      year: 2024,
+      boundary: "1 kg consumed at consumer; mean of carbonated soft drink products",
+    },
+
+    noodles: {
+      value: 1.5559,
+      unit: "kg CO2e/kg",
+      activityUnit: "kg",
+      source: "AGRIBALYSE 3.2 (ADEME)",
+      sourceUrl: "https://doi.org/10.57745/XTENSJ",
+      region: "France",
+      year: 2024,
+      boundary: "1 kg consumed at consumer; mean of noodle and pasta products",
+    },
+
+    salt: {
+      value: 0.632,
+      unit: "kg CO2e/kg",
+      activityUnit: "kg",
+      source: "AGRIBALYSE 3.2 (ADEME)",
+      sourceUrl: "https://doi.org/10.57745/XTENSJ",
+      region: "France",
+      year: 2024,
+      boundary: "1 kg consumed at consumer; mean of salt products",
     },
 
     /*

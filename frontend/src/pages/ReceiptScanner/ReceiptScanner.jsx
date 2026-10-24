@@ -269,10 +269,14 @@ export default function ReceiptScanner() {
         <Leaf size={18} />
         <p>
           Estimates use EcoTrack’s existing food emission factors and the item weight you provide.
-          Chocolate spreads and soft drinks use provisional category averages rather than
-          product-specific data. Liquid volume is converted to an approximate equal weight
-          (1 ml ≈ 1 g). This version does not perform receipt-photo OCR; unclassified or non-food
-          products are excluded from totals until reviewed.
+          New food-group factors use AGRIBALYSE 3.2 product life-cycle data for France; category
+          averages and representative products are not brand-specific. See{" "}
+          <a href="https://doi.org/10.57745/XTENSJ" target="_blank" rel="noreferrer">
+            AGRIBALYSE 3.2 (ADEME)
+          </a>
+          . Liquid volume is converted to an approximate equal weight (1 ml ≈ 1 g). This version
+          does not perform receipt-photo OCR; unclassified or non-food products are excluded from
+          totals until reviewed.
         </p>
       </section>
 
