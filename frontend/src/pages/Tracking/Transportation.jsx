@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { SelectNative } from "@/components/ui/select-native";
 import AutoTripDetection from "../../components/environment/AutoTripDetection";
+import LiveTripMap from "../Transportation/LiveTripMap";
 
 export default function Transportation() {
   const { addActivity } = useActivities();
@@ -135,6 +136,22 @@ export default function Transportation() {
         description="Calculate emissions from your daily travel."
       />
       <AutoTripDetection />
+      <LiveTripMap
+        onSave={(trip) =>
+          addActivity({
+            category: "Transportation",
+            activityType: {
+              walk: "WALK",
+              bike: "BIKE",
+              bus: "BUS",
+              car: "CAR",
+            }[trip.mode],
+            quantity: trip.km,
+            unit: "km",
+            details: `GPS trip (${trip.source}); estimated ${trip.emissions} kg CO₂e`,
+          })
+        }
+      />
       <Card>
         <CardContent className="flex flex-col gap-5">
           <Field label="Vehicle Type" icon={Car}>

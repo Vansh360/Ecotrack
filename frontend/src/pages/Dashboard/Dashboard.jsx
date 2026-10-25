@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Activity,
   ArrowDownRight,
-  BarChart3,
   Car,
   Droplets,
   Leaf,
@@ -11,20 +10,9 @@ import {
   Utensils,
   Zap,
 } from "lucide-react";
-import {
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  PieChart,
-  Pie,
-  Cell,
-} from "recharts";
 import { useNavigate } from "react-router-dom";
 import { getActivities } from "../../services/activityService";
+import FootprintCharts from "./FootprintCharts";
 import {
   getCarbonHotspot,
   getCarbonBudgetStatus,
@@ -51,14 +39,6 @@ const categoryNames = {
   WASTE: "Waste",
   WATER: "Water",
 };
-
-const pieColors = [
-  "oklch(0.88 0.19 128)",
-  "oklch(0.76 0.1 185)",
-  "oklch(0.78 0.12 85)",
-  "oklch(0.7 0.08 230)",
-  "oklch(0.82 0.08 145)",
-];
 
 function getCategoryIcon(category) {
   const normalized = String(category || "").trim().toUpperCase();
@@ -162,21 +142,25 @@ export default function Dashboard() {
     }));
   }, [activities]);
 
-  const monthlyEmissions = useMemo(() => {
-    const result = {};
-    activities.forEach((activity) => {
-      const date = activity.activityDate || activity.date || activity.createdAt;
-      if (!date) return;
-      const parsed = new Date(date);
-      if (Number.isNaN(parsed.getTime())) return;
-      const month = parsed.toLocaleDateString("en-US", { month: "short", year: "numeric" });
-      result[month] = (result[month] || 0) + Number(activity.emission || 0);
-    });
-    return Object.entries(result).map(([month, emission]) => ({
-      month,
-      emission: Number(emission.toFixed(2)),
-    }));
-  }, [activities]);
+  const chartActivities = useMemo(
+    () =>
+      activities
+        .map((activity) => {
+          const date = activity.activityDate || activity.date || activity.createdAt;
+          const parsedDate = date ? new Date(date) : null;
+          const emission = Number(activity.emission);
+          if (!parsedDate || Number.isNaN(parsedDate.getTime()) || !Number.isFinite(emission)) {
+            return null;
+          }
+          return {
+            date: parsedDate.toISOString().slice(0, 10),
+            category: activity.category || "Other",
+            emissions: emission,
+          };
+        })
+        .filter(Boolean),
+    [activities]
+  );
 
   const sustainabilityScore =
     activities.length === 0
@@ -263,93 +247,7 @@ export default function Dashboard() {
         />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[1.6fr_1fr]">
-        <Card>
-          <CardHeader>
-            <CardTitle>Carbon Emissions</CardTitle>
-            <CardDescription>Monthly CO₂e emissions</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[220px]">
-              {monthlyEmissions.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={monthlyEmissions}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                    <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-                    <YAxis tick={{ fontSize: 11 }} />
-                    <Tooltip formatter={(value) => [`${value} kg CO₂e`, "Emission"]} />
-                    <Line
-                      type="monotone"
-                      dataKey="emission"
-                      stroke="oklch(0.88 0.19 128)"
-                      strokeWidth={3}
-                      dot={{ r: 4 }}
-                      activeDot={{ r: 6 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              ) : (
-                <EmptyChart />
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Emission Sources</CardTitle>
-            <CardDescription>Where your emissions come from</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[200px]">
-              {categoryBreakdown.some((item) => item.emission > 0) ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={categoryBreakdown.filter((item) => item.emission > 0)}
-                      dataKey="emission"
-                      nameKey="category"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={90}
-                      innerRadius={55}
-                    >
-                      {categoryBreakdown
-                        .filter((item) => item.emission > 0)
-                        .map((item, index) => (
-                          <Cell key={item.category} fill={pieColors[index % 5]} />
-                        ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              ) : (
-                <EmptyChart />
-              )}
-            </div>
-            <div className="mt-2 flex flex-col gap-2">
-              {categoryBreakdown.map((item) => {
-                const Icon = getCategoryIcon(item.category);
-                return (
-                  <div
-                    className="flex items-center justify-between rounded-lg border border-border bg-background/40 px-3 py-2"
-                    key={item.category}
-                  >
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Icon size={15} />
-                      <span>{categoryNames[item.category] || item.category}</span>
-                    </div>
-                    <div className="text-sm">
-                      <strong>{item.emission.toFixed(2)} kg</strong>
-                      <span className="ml-1 text-muted-foreground">({item.percentage}%)</span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <FootprintCharts activities={chartActivities} />
 
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
@@ -473,15 +371,6 @@ export default function Dashboard() {
           </p>
         </Card>
       )}
-    </div>
-  );
-}
-
-function EmptyChart() {
-  return (
-    <div className="flex h-full flex-col items-center justify-center gap-2 text-muted-foreground">
-      <BarChart3 size={32} />
-      <span className="text-sm">No activity data yet</span>
     </div>
   );
 }
